@@ -1,0 +1,821 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="master-slave,读写分离," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Master-Slave主从模式Redis Server可以设置为另一个Redis Server的主机（从机），特殊的，一个从机同样可以设置为一个 Redis Server 的主机，这样一来 Master-Slave 的分布看起来就是一个有向无环图 DAG，如此形成 Redis Server 集群，无论是主机还是从机都是 Redis Server，都可以提供服务，主机数据更新后根据配置和策略，自动">
+<meta name="keywords" content="master-slave,读写分离">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis主从复制">
+<meta property="og:url" content="https://anthonyzero.github.io/2017/03/14/Redis主从复制/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="Master-Slave主从模式Redis Server可以设置为另一个Redis Server的主机（从机），特殊的，一个从机同样可以设置为一个 Redis Server 的主机，这样一来 Master-Slave 的分布看起来就是一个有向无环图 DAG，如此形成 Redis Server 集群，无论是主机还是从机都是 Redis Server，都可以提供服务，主机数据更新后根据配置和策略，自动">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redis04.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redis05.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redis06.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redis07.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redis08.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.477Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis主从复制">
+<meta name="twitter:description" content="Master-Slave主从模式Redis Server可以设置为另一个Redis Server的主机（从机），特殊的，一个从机同样可以设置为一个 Redis Server 的主机，这样一来 Master-Slave 的分布看起来就是一个有向无环图 DAG，如此形成 Redis Server 集群，无论是主机还是从机都是 Redis Server，都可以提供服务，主机数据更新后根据配置和策略，自动">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/redis04.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2017/03/14/Redis主从复制/"/>
+
+
+
+
+
+  <title> Redis主从复制 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2017/03/14/Redis主从复制/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Redis主从复制
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-14T17:16:55+08:00">
+                2017-03-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="Master-Slave主从模式"><a href="#Master-Slave主从模式" class="headerlink" title="Master-Slave主从模式"></a>Master-Slave主从模式</h3><p>Redis Server可以设置为另一个Redis Server的主机（从机），特殊的，一个从机同样可以设置为一个 Redis Server 的主机，这样一来 Master-Slave 的分布看起来就是一个有向无环图 DAG，如此形成 Redis Server 集群，无论是主机还是从机都是 Redis Server，都可以提供服务，主机数据更新后根据配置和策略，自动同步到从机上。Master以写为主，Slave为读为主。</p>
+<ul>
+<li>Redis使用异步复制。从Redis2.8开始从服务器会以每秒一次的频率向主服务器报告复制流（replication stream）的处理进度</li>
+<li>一个主服务器可以有多个从服务器</li>
+<li>不仅主服务器可以有从服务器，从服务器也可以有自己的从服务器，多个从服务器之间可以构成一个图状结构</li>
+<li>复制功能不会阻塞主服务器：即使有一个或多个从服务器正在进行初次同步，主服务器也可以继续处理请求</li>
+<li>复制功能也不会阻塞从服务器：只要在 redis.conf文件中进行了相应的设置，即使从服务器正在进行初次同步，服务器也可以使用旧版本的数据集来处理命令查询。不过，在从服务器删除旧版本数据集并载入新版本数据集的那段时间内，连接请求会被阻塞。</li>
+<li>复制功能可以单纯地用于数据冗余（data redundancy），也可以通过让多个从服务器处理只读命令请求来提升扩展性（scalability）：比如说，繁重的SORT命令可以交给附属节点去运行</li>
+<li>可以通过复制功能来让主服务器免于执行持久化操作：只要关闭主服务器的持久化功能，然后由从服务器去执行持久化操作即可</li>
+</ul>
+<a id="more"></a>
+<h3 id="全量同步"><a href="#全量同步" class="headerlink" title="全量同步"></a>全量同步</h3><p>Redis全量复制一般发生在Slave初始化阶段，这时Slave需要将Master上的所有数据都复制一份。具体步骤如下<br>1）从服务器连接主服务器，发送SYNC命令；<br>2）主服务器接收到SYNC命名后，开始执行BGSAVE命令生成RDB文件并使用缓冲区记录此后执行的所有写命令；<br>3）主服务器BGSAVE执行完后，向所有从服务器发送快照文件，并在发送期间继续记录被执行的写命令；<br>4）从服务器收到快照文件后丢弃所有旧数据，载入收到的快照；<br>5）主服务器快照发送完毕后开始向从服务器发送缓冲区中的写命令；<br>6）从服务器完成对快照的载入，开始接收命令请求，并执行来自主服务器缓冲区的写命令；<br>完成上面几个步骤后就完成了从服务器数据初始化的所有操作，从服务器此时可以接收来自用户的读请求。</p>
+<h3 id="增量同步"><a href="#增量同步" class="headerlink" title="增量同步"></a>增量同步</h3><p>Redis增量复制是指Slave初始化后开始正常工作时主服务器发生的写操作同步到从服务器的过程。<br>增量复制的过程主要是主服务器每执行一个写命令就会向从服务器发送相同的写命令，从服务器接收并执行收到的写命令。</p>
+<blockquote>
+<p>当主从服务器之间的连接由于某些原因断开时，从服务器可以自动进行重连接，一般都会进行一个完整的重新同步，（从Redis 2.8开始，如果遭遇连接断开，重新连接之后可以从中断处继续进行复制，而不必重新同步）</p>
+</blockquote>
+<h3 id="只读从服务器"><a href="#只读从服务器" class="headerlink" title="只读从服务器"></a>只读从服务器</h3><p>从Redis2.6开始，从服务器支持只读模式，并且是默认模式。这个行为是由Redis.conf文件中的slave-read-only 参数控制的，默认是yes。只读的从服务器会拒绝所有写命令，所以对从服务器不会有误写操作。</p>
+<blockquote>
+<p>1.当主机停止服务，从机原地待命仍可处理读请求，等待主机归位 2.当从机停止服务，从机恢复成默认的master角色（info replication命令查看），要想继续作为从机工作，必须重新连接（slaveof ip port）,除非配置了redis.conf文件</p>
+</blockquote>
+<h3 id="Liunx下配置"><a href="#Liunx下配置" class="headerlink" title="Liunx下配置"></a>Liunx下配置</h3><p>环境规划：<br>master:119.29.234.73  6379<br>slave:119.29.234.73   6380<br>slave:119.29.234.73   6381</p>
+<blockquote>
+<p>自己用一台云服务器(CentOS6.6) 3个不同端口模拟主从复制（一主二从），为了便于区分我修改了redis进程号文件路径、日志文件名、rdb快照文件名、端口；然后分别以不同的配置文件启动redis服务。</p>
+</blockquote>
+<p><img src="/images/redis04.png" alt="Alt text"><br><img src="/images/redis05.png" alt="Alt text"><br><img src="/images/redis06.png" alt="Alt text"></p>
+<h4 id="从服务器只需要（slaveof-主数据库地址-主数据库端口）便可成为从机，主机无需配置"><a href="#从服务器只需要（slaveof-主数据库地址-主数据库端口）便可成为从机，主机无需配置" class="headerlink" title="从服务器只需要（slaveof 主数据库地址  主数据库端口）便可成为从机，主机无需配置"></a>从服务器只需要（slaveof 主数据库地址  主数据库端口）便可成为从机，主机无需配置</h4><p>Slaveof 命令可以将当前服务器转变为指定服务器的从属服务器(slave server)<br>如果当前服务器已经是某个主服务器(master server)的从属服务器，那么执行 SLAVEOF host port 将使当前服务器停止对旧主服务器的同步，丢弃旧数据集，转而开始对新主服务器进行同步<br>另外，对一个从属服务器执行命令 SLAVEOF NO ONE将使得这个从属服务器关闭复制功能，并从从属服务器转变回主服务器，原来同步所得的数据集不会被丢弃。</p>
+<hr>
+<p>用info replication命令查看主从信息：如下图<br>可以看到6379端口的主库有两个从库分别为6380和6381<br><img src="/images/redis07.png" alt="Alt text"></p>
+<p>接下来进行验证：首先在主库上设置一个name的键值为11，然后到从库检查该值是否已经自动同步到了从库。如下图可以看到：数据确实从主库同步到了从库。<br><img src="/images/redis08.png" alt="Alt text"></p>
+<h3 id="哨兵模式"><a href="#哨兵模式" class="headerlink" title="哨兵模式"></a>哨兵模式</h3><p>Redis的主从架构，如果master发现故障了，还得手动将slave切换成master继续服务，手动的方式容易造成失误，导致数据丢失，那Redis有没有一种机制可以在master和slave进行监控，并在master发送故障的时候，能自动将slave切换成master呢？有的，那就是哨兵（当主机停止服务，从机不在原地待命而是由redis由多个从机中选出一个当主机，而原先的主机如果后面恢复服务则不再是主机，而是成为新主机的从机）</p>
+<blockquote>
+<p>redis-sentinel  /../sentinel.conf 启动哨兵进行监控：配置文件必须是sentinel.conf，里面的内容为：<br>sentinel monitor 被监控的数据库名（自己取名） 主机ip 端口 1</p>
+</blockquote>
+<h4 id="哨兵的作用"><a href="#哨兵的作用" class="headerlink" title="哨兵的作用"></a>哨兵的作用</h4><ol>
+<li>监控redis进行状态，包括master和slave </li>
+<li>当master机 down后，能自动将slave切换成master</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/master-slave/" rel="tag"><i class="fa fa-tag"></i> master-slave</a>
+          
+            <a href="/tags/读写分离/" rel="tag"><i class="fa fa-tag"></i> 读写分离</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/14/Redis持久化/" rel="next" title="Redis持久化">
+                <i class="fa fa-chevron-left"></i> Redis持久化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/23/单例模式/" rel="prev" title="设计模式：单例模式">
+                设计模式：单例模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Master-Slave主从模式"><span class="nav-number">1.</span> <span class="nav-text">Master-Slave主从模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#全量同步"><span class="nav-number">2.</span> <span class="nav-text">全量同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#增量同步"><span class="nav-number">3.</span> <span class="nav-text">增量同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#只读从服务器"><span class="nav-number">4.</span> <span class="nav-text">只读从服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Liunx下配置"><span class="nav-number">5.</span> <span class="nav-text">Liunx下配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#从服务器只需要（slaveof-主数据库地址-主数据库端口）便可成为从机，主机无需配置"><span class="nav-number">5.1.</span> <span class="nav-text">从服务器只需要（slaveof 主数据库地址  主数据库端口）便可成为从机，主机无需配置</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#哨兵模式"><span class="nav-number">6.</span> <span class="nav-text">哨兵模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#哨兵的作用"><span class="nav-number">6.1.</span> <span class="nav-text">哨兵的作用</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

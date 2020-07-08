@@ -1,0 +1,1024 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="二叉搜索树," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="定义二叉搜索树在极端情况下会退化成链表:如果全部或者部分地按照关键字的递增或者递减顺序插入二叉查找树的结点，则所建立的二叉查找树全部或者在局部形成退化的单分支结构，为了优化（时间复杂度）引入了平衡二叉树。 AVL树又称为平衡二叉树，即Balanced Binary Tree或者Height-Balanced Tree，它或者是一棵空二叉树，或者是具有如下性质的二叉查找树：其左子树和右子树都是高度平">
+<meta name="keywords" content="二叉搜索树">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构-平衡二叉查找树AVL">
+<meta property="og:url" content="https://anthonyzero.github.io/2020/01/28/数据结构-平衡二叉查找树AVL/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="定义二叉搜索树在极端情况下会退化成链表:如果全部或者部分地按照关键字的递增或者递减顺序插入二叉查找树的结点，则所建立的二叉查找树全部或者在局部形成退化的单分支结构，为了优化（时间复杂度）引入了平衡二叉树。 AVL树又称为平衡二叉树，即Balanced Binary Tree或者Height-Balanced Tree，它或者是一棵空二叉树，或者是具有如下性质的二叉查找树：其左子树和右子树都是高度平">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/zNRTug8wLXxbYla.png">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/oOBifNhSV8QDmHR.png">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/o2C1S3JngDKtYvu.png">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/rKBGiQ4vH9o7m1d.png">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/VpYIKG1eTUJbRxO.png">
+<meta property="og:image" content="https://i.loli.net/2020/01/28/ygKm9YE3rnCSUvs.png">
+<meta property="og:updated_time" content="2020-01-28T14:00:57.009Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据结构-平衡二叉查找树AVL">
+<meta name="twitter:description" content="定义二叉搜索树在极端情况下会退化成链表:如果全部或者部分地按照关键字的递增或者递减顺序插入二叉查找树的结点，则所建立的二叉查找树全部或者在局部形成退化的单分支结构，为了优化（时间复杂度）引入了平衡二叉树。 AVL树又称为平衡二叉树，即Balanced Binary Tree或者Height-Balanced Tree，它或者是一棵空二叉树，或者是具有如下性质的二叉查找树：其左子树和右子树都是高度平">
+<meta name="twitter:image" content="https://i.loli.net/2020/01/28/zNRTug8wLXxbYla.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2020/01/28/数据结构-平衡二叉查找树AVL/"/>
+
+
+
+
+
+  <title> 数据结构-平衡二叉查找树AVL | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2020/01/28/数据结构-平衡二叉查找树AVL/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                数据结构-平衡二叉查找树AVL
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-28T20:11:20+08:00">
+                2020-01-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据结构与算法/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构与算法</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>二叉搜索树在极端情况下会退化成链表:如果全部或者部分地按照关键字的递增或者递减顺序插入二叉查找树的结点，则所建立的二叉查找树全部或者在局部形成退化的单分支结构，为了优化（时间复杂度）引入了平衡二叉树。</p>
+<p>AVL树又称为平衡二叉树，即Balanced Binary Tree或者Height-Balanced Tree，它或者是一棵空二叉树，或者是具有如下性质的二叉查找树：其左子树和右子树都是高度平衡的二叉树，且左子树和右子树的高度之差的绝对值不超过1。如果将二叉树上结点的平衡因子BF（Balanced Factor）定义为该结点的左子树与右子树的高度之差，根据AVL树的定义，AVL树中的任意结点的平衡因子只可能是-1（右子树高于左子树）、0或者1（左子树高于右子树）.</p>
+<blockquote>
+<p>BalanceFactor = height(left-sutree) − height(right-sutree)</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="节点结构"><a href="#节点结构" class="headerlink" title="节点结构"></a>节点结构</h3><p>定义平衡二叉树的节点结构:</p>
+<pre><code>private class Node {
+    public K key;
+    public V value;
+    public Node left, right;
+    public int height; //深度，这里计算每个节点的深度，通过深度的比较可得出是否平衡
+
+    public Node(K key, V value) {
+        this.key = key;
+        this.value = value;
+        left = null;
+        right = null;
+        height = 1;
+    }
+}
+
+// 获得节点node的高度
+private int getHeight(Node node) {
+    if (node == null)
+        return 0;
+    return node.height;
+}
+
+// 获得节点node的平衡因子 左右子树的高度差
+private int getBalanceFactor(Node node) {
+    if (node == null)
+        return 0;
+    return getHeight(node.left) - getHeight(node.right);
+}
+</code></pre><h3 id="平衡调整"><a href="#平衡调整" class="headerlink" title="平衡调整"></a>平衡调整</h3><p>在平衡二叉树中，当我们插入新的元素时，为了保证二叉搜索树的特性，很容易导致某些结点失衡，即该结点的平衡因子大于1。</p>
+<p>而在二叉树中，任意结点孩子最多只有左右两个，而且导致失去平衡的必要条件就是当前结点的两颗子树的高度差等于2。因此，致使一个结点失衡的插入操作有以下4点。</p>
+<ul>
+<li>在结点的左子树的左子树插入元素,LL 插入；</li>
+<li>在结点的左子树的右子树插入元素,LR 插入；</li>
+<li>在结点的右子树的左子树插入元素,RL 插入；</li>
+<li>在结点的右子树的右子树插入元素,RR 插入。</li>
+</ul>
+<p>AVL树的调整过程很类似于数学归纳法，每次在插入新节点之后都会找到离新插入节点最近的非平衡叶节点，然后对其进行旋转操作以使得树中的每个节点都处于平衡状态。</p>
+<h4 id="插入的元素在不平衡节点左侧的左侧，简称-LL"><a href="#插入的元素在不平衡节点左侧的左侧，简称-LL" class="headerlink" title="插入的元素在不平衡节点左侧的左侧，简称 LL"></a>插入的元素在不平衡节点左侧的左侧，简称 LL</h4><p>如下面一颗AVL树，在插入节点 5 后 节点 15 的平衡因子变成了 2，树的平衡性被打破：<br><img src="https://i.loli.net/2020/01/28/zNRTug8wLXxbYla.png" alt="avl1.jpg"></p>
+<p>这种情况我们称之为 插入的元素在不平衡节点左侧的左侧 简称 LL</p>
+<p>遇到该情况需要对不平衡的节点进行右旋转：<br><img src="https://i.loli.net/2020/01/28/oOBifNhSV8QDmHR.png" alt="avl2.jpg"></p>
+<p>通用情况如下：<br><img src="https://i.loli.net/2020/01/28/o2C1S3JngDKtYvu.png" alt="avl3.jpg"></p>
+<h4 id="插入的元素在不平衡节点右侧的右侧，简称-RR"><a href="#插入的元素在不平衡节点右侧的右侧，简称-RR" class="headerlink" title="插入的元素在不平衡节点右侧的右侧，简称 RR"></a>插入的元素在不平衡节点右侧的右侧，简称 RR</h4><p>这种情况也就是上一个情况的镜像。它需要对不平衡的节点向左旋转：</p>
+<p><img src="https://i.loli.net/2020/01/28/rKBGiQ4vH9o7m1d.png" alt="avl4.jpg"></p>
+<h4 id="插入的元素在不平衡节点的左侧的右侧，简称-LR"><a href="#插入的元素在不平衡节点的左侧的右侧，简称-LR" class="headerlink" title="插入的元素在不平衡节点的左侧的右侧，简称 LR"></a>插入的元素在不平衡节点的左侧的右侧，简称 LR</h4><p>插入的元素在不平衡节点的左侧的右侧，这时候不能简单地右旋转否则破坏了二叉排序树地顺序原则。这种情况需要两次旋转：</p>
+<p><img src="https://i.loli.net/2020/01/28/VpYIKG1eTUJbRxO.png" alt="avl6.jpg"></p>
+<h4 id="插入的元素在不平衡节点的右侧的左侧，简称-RL"><a href="#插入的元素在不平衡节点的右侧的左侧，简称-RL" class="headerlink" title="插入的元素在不平衡节点的右侧的左侧，简称 RL"></a>插入的元素在不平衡节点的右侧的左侧，简称 RL</h4><p>插入的元素在不平衡节点的右侧的左侧，如下图所示：<br><img src="https://i.loli.net/2020/01/28/ygKm9YE3rnCSUvs.png" alt="avl7.jpg"></p>
+<p>插入操作维护AVL平衡性的相关代码：</p>
+<pre><code>// 向二分搜索树中添加新的元素(key, value)
+public void add(K key, V value) {
+    root = add(root, key, value);
+}
+
+// 向以node为根的二分搜索树中插入元素(key, value)，递归算法
+// 返回插入新节点后二分搜索树的根
+private Node add(Node node, K key, V value) {
+
+    if (node == null) {
+        size++;
+        return new Node(key, value);
+    }
+
+    if (key.compareTo(node.key) &lt; 0)
+        node.left = add(node.left, key, value);
+    else if (key.compareTo(node.key) &gt; 0)
+        node.right = add(node.right, key, value);
+    else // key.compareTo(node.key) == 0
+        node.value = value;
+
+    // 更新height
+    node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right));
+
+    // 计算平衡因子
+    int balanceFactor = getBalanceFactor(node);
+
+    // 添加元素之后 为了保证平衡 进行旋转 旋转一个节点即可。
+    // 在递归返回的时候（回溯） 检查到了一个节点不满足平衡因子&lt;=1 进行旋转。一次即可 上面的节点进行旋转后无需处理了
+
+    // 平衡维护 LL情况
+    if (balanceFactor &gt; 1 &amp;&amp; getBalanceFactor(node.left) &gt; 0) {
+        return rightRotate(node); //右旋转 返回新的根节点
+    }
+    // RR 情况
+    if (balanceFactor &lt; -1 &amp;&amp; getBalanceFactor(node.right) &lt;= 0) {
+        return leftRotate(node); //左旋转 返回新的根节点
+    }
+    //LR 情况
+    if (balanceFactor &gt; 1 &amp;&amp; getBalanceFactor(node.left) &lt; 0) {
+        node.left = leftRotate(node.left);
+        return rightRotate(node);
+    }
+    //RL 情况
+    if (balanceFactor &lt; -1 &amp;&amp; getBalanceFactor(node.right) &gt; 0) {
+        node.right = rightRotate(node.right);
+        return leftRotate(node);
+    }
+
+    return node;
+}
+
+// 获得节点node的高度
+private int getHeight(Node node) {
+    if (node == null)
+        return 0;
+    return node.height;
+}
+
+// 获得节点node的平衡因子 左右子树的高度差
+private int getBalanceFactor(Node node) {
+    if (node == null)
+        return 0;
+    return getHeight(node.left) - getHeight(node.right);
+}
+
+// 对节点y进行向右旋转操作，返回旋转后新的根节点x
+//        y                              x
+//       / \                           /   \
+//      x   T4     向右旋转 (y)        z     y
+//     / \       - - - - - - - -&gt;    / \   / \
+//    z   T3                       T1  T2 T3 T4
+//   / \
+// T1   T2
+private Node rightRotate(Node y) {
+    Node x = y.left;
+    Node T3 = x.right;
+
+    // 向右旋转过程
+    x.right = y;
+    y.left = T3;
+
+    //更新高度
+    y.height = 1 + Math.max(getHeight(y.left), getHeight(y.right));
+    x.height = 1 + Math.max(getHeight(x.left), getHeight(x.right));
+    return x;
+}
+
+// 对节点y进行向左旋转操作，返回旋转后新的根节点x
+//    y                             x
+//  /  \                          /   \
+// T1   x      向左旋转 (y)       y     z
+//     / \   - - - - - - - -&gt;   / \   / \
+//   T2  z                     T1 T2 T3 T4
+//      / \
+//     T3 T4
+private Node leftRotate(Node y) {
+    Node x = y.right;
+    Node T2 = x.left;
+
+    x.left = y;
+    y.right = T2;
+
+    y.height = 1 + Math.max(getHeight(y.left), getHeight(y.right));
+    x.height = 1 + Math.max(getHeight(x.left), getHeight(x.right));
+    return x;
+}
+</code></pre><h3 id="删除操作保持AVL树的平衡"><a href="#删除操作保持AVL树的平衡" class="headerlink" title="删除操作保持AVL树的平衡"></a>删除操作保持AVL树的平衡</h3><p>删除操作和插入操作需要保持平衡的情况基本是一样的：和二叉查找树中删除方法的实现类似，但是在移除结点后需要进行平衡检测，以便判断是否需要进行平衡修复。代码如下所示：</p>
+<pre><code>private Node remove(Node node, K key) {
+
+    if (node == null)
+        return null;
+
+    Node retNode = null;
+    if (key.compareTo(node.key) &lt; 0) {
+        node.left = remove(node.left, key);
+        retNode = node;
+    } else if (key.compareTo(node.key) &gt; 0) {
+        node.right = remove(node.right, key);
+        retNode = node;
+    } else {   // key.compareTo(node.key) == 0
+
+        // 待删除节点左子树为空的情况
+        if (node.left == null) {
+            Node rightNode = node.right;
+            node.right = null;
+            size--;
+            retNode = rightNode;
+        }
+
+        // 待删除节点右子树为空的情况
+        else if (node.right == null) {
+            Node leftNode = node.left;
+            node.left = null;
+            size--;
+            retNode = leftNode;
+        }
+
+        // 待删除节点左右子树均不为空的情况
+
+        // 找到比待删除节点大的最小节点, 即待删除节点右子树的最小节点
+        // 用这个节点顶替待删除节点的位置
+        else {
+            Node successor = minimum(node.right);
+            successor.right = remove(node.right, successor.key);
+            successor.left = node.left;
+
+            node.left = node.right = null;
+
+            retNode = successor;
+        }
+    }
+
+    if(retNode == null)
+        return null;
+
+    //回溯返回过程中 检查平衡因子
+    // 更新height
+    retNode.height = 1 + Math.max(getHeight(retNode.left), getHeight(retNode.right));
+
+    // 计算平衡因子
+    int balanceFactor = getBalanceFactor(retNode);
+
+    // 平衡维护
+    // LL
+    if (balanceFactor &gt; 1 &amp;&amp; getBalanceFactor(retNode.left) &gt;= 0)
+        return rightRotate(retNode);
+
+    // RR
+    if (balanceFactor &lt; -1 &amp;&amp; getBalanceFactor(retNode.right) &lt;= 0)
+        return leftRotate(retNode);
+
+    // LR
+    if (balanceFactor &gt; 1 &amp;&amp; getBalanceFactor(retNode.left) &lt; 0) {
+        retNode.left = leftRotate(retNode.left);
+        return rightRotate(retNode);
+    }
+
+    // RL
+    if (balanceFactor &lt; -1 &amp;&amp; getBalanceFactor(retNode.right) &gt; 0) {
+        retNode.right = rightRotate(retNode.right);
+        return leftRotate(retNode);
+    }
+
+    return retNode;
+}
+</code></pre><p>Java实现的核心代码地址为<a href="https://github.com/AnthonyZero/data-structure/blob/master/AVL-Tree/AVL-Tree-Remove-Elements/src/AVLTree.java" target="_blank" rel="noopener">AVLTree</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/二叉搜索树/" rel="tag"><i class="fa fa-tag"></i> 二叉搜索树</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/01/18/数据结构-字典树/" rel="next" title="数据结构-字典树">
+                <i class="fa fa-chevron-left"></i> 数据结构-字典树
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/31/数据结构-红黑树/" rel="prev" title="数据结构-红黑树(元素插入小结)">
+                数据结构-红黑树(元素插入小结) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#节点结构"><span class="nav-number">2.</span> <span class="nav-text">节点结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#平衡调整"><span class="nav-number">3.</span> <span class="nav-text">平衡调整</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#插入的元素在不平衡节点左侧的左侧，简称-LL"><span class="nav-number">3.1.</span> <span class="nav-text">插入的元素在不平衡节点左侧的左侧，简称 LL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#插入的元素在不平衡节点右侧的右侧，简称-RR"><span class="nav-number">3.2.</span> <span class="nav-text">插入的元素在不平衡节点右侧的右侧，简称 RR</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#插入的元素在不平衡节点的左侧的右侧，简称-LR"><span class="nav-number">3.3.</span> <span class="nav-text">插入的元素在不平衡节点的左侧的右侧，简称 LR</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#插入的元素在不平衡节点的右侧的左侧，简称-RL"><span class="nav-number">3.4.</span> <span class="nav-text">插入的元素在不平衡节点的右侧的左侧，简称 RL</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除操作保持AVL树的平衡"><span class="nav-number">4.</span> <span class="nav-text">删除操作保持AVL树的平衡</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

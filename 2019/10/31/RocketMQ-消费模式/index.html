@@ -1,0 +1,793 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MQ," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="简介RocketMQ提供了两种消费模式，Push和Pull，大多数场景使用的是Push模式，而在Pull模式下，需要业务应用代码自身去完成比较多的事情，例如需要Consumer端自己保存消息消费的offset偏移量至本地变量中。因此在实际应用中用的较少。 在源码中这两种模式分别对应的是DefaultMQPushConsumer类和DefaultMQPullConsumer类。Push模式实际上在内">
+<meta name="keywords" content="MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ-消费模式">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/10/31/RocketMQ-消费模式/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="简介RocketMQ提供了两种消费模式，Push和Pull，大多数场景使用的是Push模式，而在Pull模式下，需要业务应用代码自身去完成比较多的事情，例如需要Consumer端自己保存消息消费的offset偏移量至本地变量中。因此在实际应用中用的较少。 在源码中这两种模式分别对应的是DefaultMQPushConsumer类和DefaultMQPullConsumer类。Push模式实际上在内">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-10-30T14:23:06.955Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RocketMQ-消费模式">
+<meta name="twitter:description" content="简介RocketMQ提供了两种消费模式，Push和Pull，大多数场景使用的是Push模式，而在Pull模式下，需要业务应用代码自身去完成比较多的事情，例如需要Consumer端自己保存消息消费的offset偏移量至本地变量中。因此在实际应用中用的较少。 在源码中这两种模式分别对应的是DefaultMQPushConsumer类和DefaultMQPullConsumer类。Push模式实际上在内">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/10/31/RocketMQ-消费模式/"/>
+
+
+
+
+
+  <title> RocketMQ-消费模式 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/10/31/RocketMQ-消费模式/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RocketMQ-消费模式
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-31T21:51:51+08:00">
+                2019-10-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>RocketMQ提供了两种消费模式，Push和Pull，大多数场景使用的是Push模式，而在Pull模式下，需要业务应用代码自身去完成比较多的事情，例如需要Consumer端自己保存消息消费的offset偏移量至本地变量中。因此在实际应用中用的较少。</p>
+<p>在源码中这两种模式分别对应的是DefaultMQPushConsumer类和DefaultMQPullConsumer类。Push模式实际上在内部还是使用的Pull方式实现的，通过Consumer采用长轮询方式不断地轮询Broker获取消息，当不存在新消息时，Broker端会挂起Pull请求，直到有新消息产生才取消挂起，返回新消息。</p>
+<blockquote>
+<p>之所以Push模式不设计为Broker主动推送，我猜测一是在于加大了Broker的压力，二是分布式系统中并不知道消费者的消费能力-这一点不可控</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="Consumer向Broker端发送Pull消息请求"><a href="#Consumer向Broker端发送Pull消息请求" class="headerlink" title="Consumer向Broker端发送Pull消息请求"></a>Consumer向Broker端发送Pull消息请求</h3><p>在RocketMQ的Consumer端，后台独立线程服务启动—pullMessageService是Pull消息请求的发起者，它不断地尝试从阻塞队列—LinkedBlockingQueue<pullrequest>中获取元素PullRequest，并根据pullRequest中的参数以及订阅关系信息调用pullAPIWrapper的pullKernelImpl()方法发送封装后的Pull消息请求—PullMessageRequestHeader至Broker端来拉取消息</pullrequest></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">//consumer.start(); consumer启动    </span><br><span class="line">this.defaultMQPushConsumerImpl.start();</span><br><span class="line"></span><br><span class="line">// mQClientFactory.start();</span><br><span class="line">synchronized (this) &#123;</span><br><span class="line">    switch (this.serviceState) &#123;</span><br><span class="line">        case CREATE_JUST:</span><br><span class="line">            this.serviceState = ServiceState.START_FAILED;</span><br><span class="line">            // If not specified,looking address from name server</span><br><span class="line">            if (null == this.clientConfig.getNamesrvAddr()) &#123;</span><br><span class="line">                this.mQClientAPIImpl.fetchNameServerAddr();</span><br><span class="line">            &#125;</span><br><span class="line">            // Start request-response channel</span><br><span class="line">            this.mQClientAPIImpl.start();</span><br><span class="line">            // Start various schedule tasks</span><br><span class="line">            this.startScheduledTask();</span><br><span class="line">            // Start pull service</span><br><span class="line">            this.pullMessageService.start();  //启动pullMessageService</span><br><span class="line">            // Start rebalance service</span><br><span class="line">            this.rebalanceService.start();  //后台独立线程—rebalanceService</span><br><span class="line">            // Start push service</span><br><span class="line">            this.defaultMQProducer.getDefaultMQProducerImpl().start(false);</span><br><span class="line">            log.info(&quot;the client factory [&#123;&#125;] start OK&quot;, this.clientId);</span><br><span class="line">            this.serviceState = ServiceState.RUNNING;</span><br><span class="line">            break;</span><br><span class="line">        case RUNNING:</span><br><span class="line">            break;</span><br><span class="line">        case SHUTDOWN_ALREADY:</span><br><span class="line">            break;</span><br><span class="line">        case START_FAILED:</span><br><span class="line">            throw new MQClientException(&quot;The Factory object[&quot; + this.getClientId() + &quot;] has been created before, and failed.&quot;, null);</span><br><span class="line">        default:</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>rebalanceService根据Topic中消息队列个数和当前消费组内消费者个数进行负载均衡，将产生的对应PullRequest实例放入阻塞队列—pullRequestQueue中</p>
+<p>见PullMessageService的run方法中可见：PullMessageService不断地从阻塞队列—pullRequestQueue中获取PullRequest请求并通过网络通信模块发送Pull消息的RPC请求给Broker端<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public void run() &#123;</span><br><span class="line">    log.info(this.getServiceName() + &quot; service started&quot;);</span><br><span class="line"></span><br><span class="line">    while (!this.isStopped()) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            PullRequest pullRequest = this.pullRequestQueue.take();</span><br><span class="line">            this.pullMessage(pullRequest);</span><br><span class="line">        &#125; catch (InterruptedException ignored) &#123;</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            log.error(&quot;Pull Message Service Run Method exception&quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    log.info(this.getServiceName() + &quot; service end&quot;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void pullMessage(final PullRequest pullRequest) &#123;</span><br><span class="line">    final MQConsumerInner consumer = this.mQClientFactory.selectConsumer(pullRequest.getConsumerGroup());</span><br><span class="line">    if (consumer != null) &#123;</span><br><span class="line">        DefaultMQPushConsumerImpl impl = (DefaultMQPushConsumerImpl) consumer;</span><br><span class="line">        impl.pullMessage(pullRequest); //发送RPC 请求</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        log.warn(&quot;No matched consumer for the PullRequest &#123;&#125;, drop it&quot;, pullRequest);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里发送请求是调用DefaultMQPushConsumerImpl的pullMessage(pullRequest)方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">public void pullMessage(final PullRequest pullRequest) &#123;</span><br><span class="line">    .......</span><br><span class="line">    try &#123;</span><br><span class="line">        this.pullAPIWrapper.pullKernelImpl(</span><br><span class="line">            pullRequest.getMessageQueue(),</span><br><span class="line">            subExpression,</span><br><span class="line">            subscriptionData.getExpressionType(),</span><br><span class="line">            subscriptionData.getSubVersion(),</span><br><span class="line">            pullRequest.getNextOffset(),</span><br><span class="line">            this.defaultMQPushConsumer.getPullBatchSize(),</span><br><span class="line">            sysFlag,</span><br><span class="line">            commitOffsetValue,</span><br><span class="line">            BROKER_SUSPEND_MAX_TIME_MILLIS,</span><br><span class="line">            CONSUMER_TIMEOUT_MILLIS_WHEN_SUSPEND,</span><br><span class="line">            CommunicationMode.ASYNC,</span><br><span class="line">            pullCallback</span><br><span class="line">        );</span><br><span class="line">    &#125; catch (Exception e) &#123;</span><br><span class="line">        log.error(&quot;pullKernelImpl exception&quot;, e);</span><br><span class="line">        this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_EXCEPTION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 进入 this.pullAPIWrapper.pullKernelImpl方法：</span><br><span class="line">构造请求头等省略</span><br><span class="line">......</span><br><span class="line">PullResult pullResult = this.mQClientFactory.getMQClientAPIImpl().pullMessage(</span><br><span class="line">    brokerAddr,</span><br><span class="line">    requestHeader,</span><br><span class="line">    timeoutMillis,</span><br><span class="line">    communicationMode,</span><br><span class="line">    pullCallback);</span><br></pre></td></tr></table></figure></p>
+<p>通过RocketMQ的Remoting通信层向Broker端发送Pull消息的RPC请求：具体完成发送一次Pull消息的PRC通信请求的是MQClientAPIImpl中的pullMessage()方法。到此消费者消息发送完毕</p>
+<h3 id="Broker端处理Pull消息请求"><a href="#Broker端处理Pull消息请求" class="headerlink" title="Broker端处理Pull消息请求"></a>Broker端处理Pull消息请求</h3><p>从NettyServerHandler处理中根据Cmd Code拿到的Processor处理器应该是PullMessageProcessor：也就是说PullMessageProcessor的processRequest为处理拉取消息请求的入口。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">private RemotingCommand processRequest(final Channel channel, RemotingCommand request, boolean brokerAllowSuspend)&#123;</span><br><span class="line">    ......</span><br><span class="line">    case ResponseCode.SUCCESS:</span><br><span class="line">    ......</span><br><span class="line">    //如果PULL到消息了 采用基于Zero-Copy的Netty组件的FileRegion，其包装的“FileChannel.tranferTo”实现数据传输，</span><br><span class="line">    // 可以直接将文件缓冲区的数据发送至通信目标通道Channel中</span><br><span class="line">            FileRegion fileRegion = new ManyMessageTransfer(response.encodeHeader(getMessageResult.getBufferTotalSize()), getMessageResult);</span><br><span class="line">            channel.writeAndFlush(fileRegion).addListener(new ChannelFutureListener() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void operationComplete(ChannelFuture future) throws Exception &#123;</span><br><span class="line">                    getMessageResult.release();</span><br><span class="line">                    if (!future.isSuccess()) &#123;</span><br><span class="line">                        log.error(&quot;transfer many message by pagecache failed, &#123;&#125;&quot;, channel.remoteAddress(), future.cause());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">    ......</span><br><span class="line">    // 当还没有消息可以拉取情况下 Broker端会hold住这个请求，</span><br><span class="line">    // 直到Broker端存在相关的数据，或者等待超时时间后返回</span><br><span class="line">    // 在响应返回后，Consumer端又会再次发起下一次的长轮询请求。RocketMQ的push模式正是采用了这种长轮询机制的设计思路</span><br><span class="line">    case ResponseCode.PULL_NOT_FOUND:</span><br><span class="line">        if (brokerAllowSuspend &amp;&amp; hasSuspendFlag) &#123;</span><br><span class="line">            long pollingTimeMills = suspendTimeoutMillisLong;</span><br><span class="line">            if (!this.brokerController.getBrokerConfig().isLongPollingEnable()) &#123;</span><br><span class="line">                pollingTimeMills = this.brokerController.getBrokerConfig().getShortPollingTimeMills();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String topic = requestHeader.getTopic();</span><br><span class="line">            long offset = requestHeader.getQueueOffset();</span><br><span class="line">            int queueId = requestHeader.getQueueId();</span><br><span class="line">            PullRequest pullRequest = new PullRequest(request, channel, pollingTimeMills,</span><br><span class="line">                this.brokerController.getMessageStore().now(), offset, subscriptionData, messageFilter);</span><br><span class="line">            this.brokerController.getPullRequestHoldService().suspendPullRequest(topic, queueId, pullRequest);</span><br><span class="line">            response = null;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果在上述的第一次尝试Pull消息失败后（比如Broker端暂时没有可以消费的消息），先hold住并且挂起该请求（这里，设置返回响应response为null，此时不会向Consumer端发送任何响应的内容，即不会对响应结果进行处理），然后通过Broker端的后台线程PullRequestHoldService重新尝试和后台线程ReputMessageService的二次处理。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">private ConcurrentMap&lt;String/* topic@queueId */, ManyPullRequest&gt; pullRequestTable</span><br><span class="line">//将需要hold处理的PullRequest放入到一个ConcurrentHashMap中，等待被检查</span><br><span class="line">public void suspendPullRequest(final String topic, final int queueId, final PullRequest pullRequest) &#123;</span><br><span class="line">    String key = this.buildKey(topic, queueId);</span><br><span class="line">    ManyPullRequest mpr = this.pullRequestTable.get(key);</span><br><span class="line">    if (null == mpr) &#123;</span><br><span class="line">        mpr = new ManyPullRequest();</span><br><span class="line">        ManyPullRequest prev = this.pullRequestTable.putIfAbsent(key, mpr);</span><br><span class="line">        if (prev != null) &#123;</span><br><span class="line">            mpr = prev;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mpr.addPullRequest(pullRequest);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public void run() &#123;</span><br><span class="line">    log.info(&quot;&#123;&#125; service started&quot;, this.getServiceName());</span><br><span class="line">    while (!this.isStopped()) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            if (this.brokerController.getBrokerConfig().isLongPollingEnable()) &#123;</span><br><span class="line">                this.waitForRunning(5 * 1000);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                this.waitForRunning(this.brokerController.getBrokerConfig().getShortPollingTimeMills());</span><br><span class="line">            &#125;</span><br><span class="line">            long beginLockTimestamp = this.systemClock.now();</span><br><span class="line">            this.checkHoldRequest();</span><br><span class="line">            long costTime = this.systemClock.now() - beginLockTimestamp;</span><br><span class="line">            if (costTime &gt; 5 * 1000) &#123;</span><br><span class="line">                log.info(&quot;[NOTIFYME] check hold request cost &#123;&#125; ms.&quot;, costTime);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (Throwable e) &#123;</span><br><span class="line">            log.warn(this.getServiceName() + &quot; service has exception. &quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    log.info(&quot;&#123;&#125; service end&quot;, this.getServiceName());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//具体的检查代码在checkHoldRequest中</span><br><span class="line">private void checkHoldRequest() &#123;</span><br><span class="line">    for (String key : this.pullRequestTable.keySet()) &#123;</span><br><span class="line">        String[] kArray = key.split(TOPIC_QUEUEID_SEPARATOR);</span><br><span class="line">        if (2 == kArray.length) &#123;</span><br><span class="line">            String topic = kArray[0];</span><br><span class="line">            int queueId = Integer.parseInt(kArray[1]);</span><br><span class="line">            final long offset = this.brokerController.getMessageStore().getMaxOffsetInQueue(topic, queueId);</span><br><span class="line">            try &#123;</span><br><span class="line">                this.notifyMessageArriving(topic, queueId, offset);</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                log.error(&quot;check hold request failed. topic=&#123;&#125;, queueId=&#123;&#125;&quot;, topic, queueId, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在run方法中不停检查（checkHoldRequest）：一是从pullRequestTable本地缓存变量中取PullRequest请求，检查轮询条件—“待拉取消息的偏移量是否小于消费队列最大偏移量”是否成立，如果条件成立则说明有新消息达到Broker端；另外一个就是比较当前的时间和阻塞的时间，看是否超过了最大的阻塞时间，超过也同样返回。</p>
+<h3 id="Consumer端收到消息消费"><a href="#Consumer端收到消息消费" class="headerlink" title="Consumer端收到消息消费"></a>Consumer端收到消息消费</h3><p>服务端处理完之后，给客户端响应，回调其中的PullCallback进行我们的消息消费。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"> //NettyRemotingAbstract的processResponseCommand()方法 从NettyClientHandler中进入</span><br><span class="line"> public void processResponseCommand(ChannelHandlerContext ctx, RemotingCommand cmd) &#123;</span><br><span class="line">    final int opaque = cmd.getOpaque();</span><br><span class="line">    final ResponseFuture responseFuture = responseTable.get(opaque);</span><br><span class="line">    if (responseFuture != null) &#123;</span><br><span class="line">        responseFuture.setResponseCommand(cmd);</span><br><span class="line"></span><br><span class="line">        responseTable.remove(opaque);</span><br><span class="line">        //这里invokeCallback有值 执行异步回调</span><br><span class="line">        if (responseFuture.getInvokeCallback() != null) &#123;</span><br><span class="line">            executeInvokeCallback(responseFuture);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            responseFuture.putResponse(cmd);</span><br><span class="line">            responseFuture.release();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        log.warn(&quot;receive response, but not matched any request, &quot; + RemotingHelper.parseChannelRemoteAddr(ctx.channel()));</span><br><span class="line">        log.warn(cmd.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//继续到达pullMessageAsync的operationComplete（）方法</span><br><span class="line">public void operationComplete(ResponseFuture responseFuture) &#123;</span><br><span class="line">    RemotingCommand response = responseFuture.getResponseCommand();</span><br><span class="line">    if (response != null) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            PullResult pullResult = MQClientAPIImpl.this.processPullResponse(response);</span><br><span class="line">            assert pullResult != null;</span><br><span class="line">            pullCallback.onSuccess(pullResult); //执行</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            pullCallback.onException(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//见PullCallback(DefaultMQPushConsumerImpl)   </span><br><span class="line">boolean dispatchToConsume = processQueue.putMessage(pullResult.getMsgFoundList());</span><br><span class="line">// 到这里开始执行消费情况了  submitConsumeRequest</span><br><span class="line">DefaultMQPushConsumerImpl.this.consumeMessageService.submitConsumeRequest(</span><br><span class="line">    pullResult.getMsgFoundList(),</span><br><span class="line">    processQueue,</span><br><span class="line">    pullRequest.getMessageQueue(),</span><br><span class="line">    dispatchToConsume);</span><br></pre></td></tr></table></figure></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>RocketMQ的消费方式都是基于拉模式拉取消息的，而在这其中有一种长轮询机制（对普通轮询的一种优化），来平衡常规Push/Pull模型的各自缺点。通过这种长轮询机制，可以解决Consumer端需要通过不断地发送无效的轮询Pull请求，而导致整个RocketMQ集群中Broker端负载很高的问题。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MQ/" rel="tag"><i class="fa fa-tag"></i> MQ</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/30/RocketMQ-刷盘策略/" rel="next" title="RocketMQ-刷盘策略">
+                <i class="fa fa-chevron-left"></i> RocketMQ-刷盘策略
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/11/28/LeetCode-142-环形链表-II/" rel="prev" title="LeetCode 142. 环形链表 II">
+                LeetCode 142. 环形链表 II <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consumer向Broker端发送Pull消息请求"><span class="nav-number">2.</span> <span class="nav-text">Consumer向Broker端发送Pull消息请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Broker端处理Pull消息请求"><span class="nav-number">3.</span> <span class="nav-text">Broker端处理Pull消息请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consumer端收到消息消费"><span class="nav-number">4.</span> <span class="nav-text">Consumer端收到消息消费</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

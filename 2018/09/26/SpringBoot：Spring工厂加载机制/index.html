@@ -1,0 +1,1016 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring,工厂加载机制,自动装配," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="简介Spring 工厂加载机制，即 Spring Factories Loader，核心逻辑是使用 SpringFactoriesLoader 加载由用户实现的类，并配置在约定好的META-INF/spring.factories 路径下，该机制可以为框架上下文动态的增加扩展。该机制类似于 Java SPI，给用户提供可扩展的钩子，从而达到对框架的自定义扩展功能。本文记录在SpringBoot中S">
+<meta name="keywords" content="Spring,工厂加载机制,自动装配">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringBoot：Spring工厂加载机制">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/09/26/SpringBoot：Spring工厂加载机制/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="简介Spring 工厂加载机制，即 Spring Factories Loader，核心逻辑是使用 SpringFactoriesLoader 加载由用户实现的类，并配置在约定好的META-INF/spring.factories 路径下，该机制可以为框架上下文动态的增加扩展。该机制类似于 Java SPI，给用户提供可扩展的钩子，从而达到对框架的自定义扩展功能。本文记录在SpringBoot中S">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.528Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SpringBoot：Spring工厂加载机制">
+<meta name="twitter:description" content="简介Spring 工厂加载机制，即 Spring Factories Loader，核心逻辑是使用 SpringFactoriesLoader 加载由用户实现的类，并配置在约定好的META-INF/spring.factories 路径下，该机制可以为框架上下文动态的增加扩展。该机制类似于 Java SPI，给用户提供可扩展的钩子，从而达到对框架的自定义扩展功能。本文记录在SpringBoot中S">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/09/26/SpringBoot：Spring工厂加载机制/"/>
+
+
+
+
+
+  <title> SpringBoot：Spring工厂加载机制 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/09/26/SpringBoot：Spring工厂加载机制/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                SpringBoot：Spring工厂加载机制
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-26T11:52:47+08:00">
+                2018-09-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SpringBoot/" itemprop="url" rel="index">
+                    <span itemprop="name">SpringBoot</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Spring 工厂加载机制，即 Spring Factories Loader，核心逻辑是使用 SpringFactoriesLoader 加载由用户实现的类，并配置在约定好的META-INF/spring.factories 路径下，该机制可以为框架上下文动态的增加扩展。<br>该机制类似于 Java SPI，给用户提供可扩展的钩子，从而达到对框架的自定义扩展功能。<br>本文记录在SpringBoot中Spring工厂加载机制的运用。SpringBoot版本为2.0.5.RELEASE</p>
+<blockquote>
+<p>SpringFactoriesLoader 是 Spring 工厂加载机制的核心底层实现类。它的主要作用是 从 META-INF/spring.factories 路径下加载指定接口的实现类。该文件可能存在于工程类路径下或者 jar 包之内，所以会存在多个该文件。</p>
+</blockquote>
+<h3 id="SpringBoot自动装配"><a href="#SpringBoot自动装配" class="headerlink" title="SpringBoot自动装配"></a>SpringBoot自动装配</h3><p><strong>Spring Boot 完成自动装配的核心之一就是工厂加载机制。我们以 Spring Boot 的自动装配为例来分析。如果要开启 Spring 的自动装配功能，@SpringBootApplication派生 @EnableAutoConfiguration 这个注解，这个注解会 Import AutoConfigurationImportSelector 这个类。</strong></p>
+<a id="more"></a>
+<pre><code>@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    String ENABLED_OVERRIDE_PROPERTY = &quot;spring.boot.enableautoconfiguration&quot;;
+
+    Class&lt;?&gt;[] exclude() default {};
+
+    String[] excludeName() default {};
+}
+</code></pre><p><strong>AutoConfigurationImportSelector实现了ImportSelector接口(覆盖selectImport方法)</strong></p>
+<blockquote>
+<p>ImportSelector接口是至Spring中导入外部配置的核心接口，在SpringBoot的自动化配置和@EnableXXX(功能性注解)都有它的存在</p>
+</blockquote>
+<pre><code>public class AutoConfigurationImportSelector
+        implements DeferredImportSelector, BeanClassLoaderAware, ResourceLoaderAware,
+        BeanFactoryAware, EnvironmentAware, Ordered {
+
+}
+
+public interface DeferredImportSelector extends ImportSelector
+</code></pre><p><strong>selectImport方法会在spring.factories文件中找出key为EnableAutoConfiguration对应的值。这些类都是自动化配置类：<br>spring.factories文件是以Java的Properties格式存在，key是接口或抽象类的全名、value是以逗号 “ , “ 分隔的实现类</strong>    </p>
+<pre><code># Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
+org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration,\
+org.springframework.boot.autoconfigure.cloud.CloudAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration,\
+org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration,\
+org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
+</code></pre><p><strong>代码的实现，EnableAutoConfigurationImportSelector的selectImport方法：</strong></p>
+<pre><code>@Override
+public String[] selectImports(AnnotationMetadata annotationMetadata) {
+    if (!isEnabled(annotationMetadata)) {
+        return NO_IMPORTS;
+    }
+    AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
+            .loadMetadata(this.beanClassLoader);
+    // 获取注解的属性
+    AnnotationAttributes attributes = getAttributes(annotationMetadata);
+    // 读取spring.factories属性文件中的数据
+    List&lt;String&gt; configurations = getCandidateConfigurations(annotationMetadata,
+            attributes);
+    // 删除重复的配置类
+    configurations = removeDuplicates(configurations);
+    // 找到@EnableAutoConfiguration注解中定义的需要被过滤的配置类
+    Set&lt;String&gt; exclusions = getExclusions(annotationMetadata, attributes);
+    checkExcludedClasses(configurations, exclusions);
+    // 删除这些需要被过滤的配置类
+    configurations.removeAll(exclusions);
+    configurations = filter(configurations, autoConfigurationMetadata);
+    fireAutoConfigurationImportEvents(configurations, exclusions);
+    // 返回最终得到的自动化配置类
+    return StringUtils.toStringArray(configurations);
+}
+
+// 读取spring.factories属性文件中的数据
+protected List&lt;String&gt; getCandidateConfigurations(AnnotationMetadata metadata,
+            AnnotationAttributes attributes) {
+    List&lt;String&gt; configurations = SpringFactoriesLoader.loadFactoryNames(
+            getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+    Assert.notEmpty(configurations,
+            &quot;No auto configuration classes found in META-INF/spring.factories. If you &quot;
+                    + &quot;are using a custom packaging, make sure that file is correct.&quot;);
+    return configurations;
+}
+
+// 返回key为EnableAutoConfiguration
+protected Class&lt;?&gt; getSpringFactoriesLoaderFactoryClass() {
+    return EnableAutoConfiguration.class;
+}
+
+public static List&lt;String&gt; loadFactoryNames(Class&lt;?&gt; factoryClass, @Nullable ClassLoader classLoader) {
+    String factoryClassName = factoryClass.getName();
+    return loadSpringFactories(classLoader).getOrDefault(factoryClassName, Collections.emptyList());
+}
+
+// 从META-INF/spring.factories文件中加载 所有以 factoryClass 为 Key 的实现类
+// 核心：FACTORIES_RESOURCE_LOCATION 就是&quot;META-INF/spring.factories&quot;
+private static Map&lt;String, List&lt;String&gt;&gt; loadSpringFactories(@Nullable ClassLoader classLoader) {
+    MultiValueMap&lt;String, String&gt; result = cache.get(classLoader);
+    if (result != null) {
+        return result;
+    }
+
+    try {
+        Enumeration&lt;URL&gt; urls = (classLoader != null ?
+                classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
+                ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
+        //一Key多值 Map&lt;K, List&lt;V&gt;&gt;
+        result = new LinkedMultiValueMap&lt;&gt;();
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            UrlResource resource = new UrlResource(url);
+            Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+            for (Map.Entry&lt;?, ?&gt; entry : properties.entrySet()) {
+                // 以逗号进行分割，得到List的实现类全限定名集合
+                List&lt;String&gt; factoryClassNames = Arrays.asList(
+                        StringUtils.commaDelimitedListToStringArray((String) entry.getValue()));
+                result.addAll((String) entry.getKey(), factoryClassNames);
+            }
+        }
+        // 加入缓存
+        cache.put(classLoader, result);
+        return result;
+    }
+    catch (IOException ex) {
+        throw new IllegalArgumentException(&quot;Unable to load factories from location [&quot; +
+                FACTORIES_RESOURCE_LOCATION + &quot;]&quot;, ex);
+    }
+}
+</code></pre><p><strong> 通过这样的机制，我们可以十分的方便的为框架提供各式各样的扩展插件，我们可以自己定义自己的组件的自动装配配置类，然后通过工厂加载机制让 Spring 进行加载并得到自动装配。</strong></p>
+<h3 id="加载应用上下文初始器ApplicationContextInitializer"><a href="#加载应用上下文初始器ApplicationContextInitializer" class="headerlink" title="加载应用上下文初始器ApplicationContextInitializer"></a>加载应用上下文初始器ApplicationContextInitializer</h3><p>扩展一：利用 Spring 工厂加载机制，实例化 ApplicationContextInitializer 实现类，并排序对象集合</p>
+<p>ApplicationContextInitializer 主要提供应用上下文未refresh之前的扩展，这时候可以对 ConfigurableApplicationContext 进行一些扩展处理等。</p>
+<p>自定义一个类，实现 ApplicationContextInitializer ，并重写 initialize 方法：</p>
+<pre><code>import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
+@Order(Ordered.HIGHEST_PRECEDENCE) # 执行顺序跟本例无关
+public class HelloworldApplicationContextInitializer implements ApplicationContextInitializer {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        System.out.println(&quot;应用上下文初始化：&quot; + applicationContext.getId());
+    }
+}
+</code></pre><p> <strong> 启动 Spring Boot 程序 </strong></p>
+<pre><code>public class SpringApplicationBoostrap {
+
+    public static void main(String[] args) {
+        Set&lt;String&gt; set = new HashSet&lt;&gt;();
+        set.add(ApplicationConfiguration.class.getName());
+        SpringApplication springApplication = new SpringApplication();
+        springApplication.setSources(set);
+        springApplication.setWebApplicationType(WebApplicationType.NONE);
+        ConfigurableApplicationContext configurableApplicationContext = springApplication.run(args);
+    }
+
+    @SpringBootApplication
+    public static class ApplicationConfiguration{
+
+    }
+
+    控制台输出：应用上下文初始化：org.springframework.context.annotation.AnnotationConfigApplicationContext@3e3047e6
+}
+</code></pre><h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p> 具体实现来自于 SpringApplicatio准备阶段</p>
+<pre><code>#来自SpringApplication构造函数
+public SpringApplication(ResourceLoader resourceLoader, Class&lt;?&gt;... primarySources) {
+    this.resourceLoader = resourceLoader;
+    Assert.notNull(primarySources, &quot;PrimarySources must not be null&quot;);
+    this.primarySources = new LinkedHashSet&lt;&gt;(Arrays.asList(primarySources));
+    # 根据当前应用 ClassPath 中是否存在相关实现类来推断 Web 应用的类型
+    this.webApplicationType = deduceWebApplicationType();
+    # 加载应用上下文初始器
+    setInitializers((Collection) getSpringFactoriesInstances(
+            ApplicationContextInitializer.class));
+    # 加载应用事件监听器
+    setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+    # 根据 Main 线程执行堆栈判断实际的引导类
+    this.mainApplicationClass = deduceMainApplicationClass();
+}
+
+private &lt;T&gt; Collection&lt;T&gt; getSpringFactoriesInstances(Class&lt;T&gt; type) {
+    return getSpringFactoriesInstances(type, new Class&lt;?&gt;[] {});
+}
+
+private &lt;T&gt; Collection&lt;T&gt; getSpringFactoriesInstances(Class&lt;T&gt; type,
+        Class&lt;?&gt;[] parameterTypes, Object... args) {
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    // 还是回到实质：SpringFactoriesLoader的loadSpringFactories方法
+    Set&lt;String&gt; names = new LinkedHashSet&lt;&gt;(
+            SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+    List&lt;T&gt; instances = createSpringFactoriesInstances(type, parameterTypes,
+            classLoader, args, names);
+    AnnotationAwareOrderComparator.sort(instances);
+    return instances;
+}
+</code></pre><h4 id="技术"><a href="#技术" class="headerlink" title="技术"></a>技术</h4><ul>
+<li>实现类： org.springframework.core.io.support.SpringFactoriesLoader</li>
+<li>配置资源： META-INF/spring.factories</li>
+<li>排序： AnnotationAwareOrderComparator#sort</li>
+</ul>
+<h3 id="加载应用事件监听器ApplicationListener"><a href="#加载应用事件监听器ApplicationListener" class="headerlink" title="加载应用事件监听器ApplicationListener"></a>加载应用事件监听器ApplicationListener</h3><p>跟加载应用上下文初始器类似，都是运用了 Spring 工厂加载机制原理</p>
+<p>自定义一个类，实现ApplicationListener接口， 并重写 onApplicationEvent 方法：</p>
+<pre><code>import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class HelloWorldApplciationListener implements ApplicationListener&lt;ContextRefreshedEvent&gt; {
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        System.out.println(&quot;helloword:&quot; + event.getApplicationContext().getId() +
+                &quot;, timestamp:&quot; + event.getTimestamp());
+    }
+}
+</code></pre><p><strong> 跟上面一样的代码启动 Spring Boot 程序 </strong></p>
+<pre><code>控制台输出：helloword:application, timestamp:1540534996327
+</code></pre><p>它的实现原理和技术跟加载应用上下文初始器一样</p>
+<pre><code># 加载应用上下文初始器
+setInitializers((Collection) getSpringFactoriesInstances(
+        ApplicationContextInitializer.class));
+# 加载应用事件监听器
+setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+</code></pre><p><strong> 来自于spring-boot-autoconfigure-2.0.5.RELEASE.jar包中：</strong></p>
+<pre><code># Initializers
+org.springframework.context.ApplicationContextInitializer=\
+org.springframework.boot.autoconfigure.SharedMetadataReaderFactoryContextInitializer,\
+org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener
+
+# Application Listeners
+org.springframework.context.ApplicationListener=\
+org.springframework.boot.autoconfigure.BackgroundPreinitializer
+</code></pre><ul>
+<li>SpringBoot自动装配和应用上下文初始器、事件监听器他们都运用了Spring 工厂机制加载 META-INF/spring.factories，</li>
+<li>自动装配的核心在于Spring的条件装配和ImportSelector接口</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Spring Framework内部使用一种工厂加载机制(Factory Loading Mechanism)。这种机制使用SpringFactoriesLoader完成，<br>它是 Spring 动态加载实现类的一种方式，我们只需要遵守这个机制并在对应的文件中写出需要加载的接口和实例即可，或者自己使用SpringFactoriesLoader实现加载</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring/" rel="tag"><i class="fa fa-tag"></i> Spring</a>
+          
+            <a href="/tags/工厂加载机制/" rel="tag"><i class="fa fa-tag"></i> 工厂加载机制</a>
+          
+            <a href="/tags/自动装配/" rel="tag"><i class="fa fa-tag"></i> 自动装配</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/12/Spring-条件装配/" rel="next" title="Spring：条件装配">
+                <i class="fa fa-chevron-left"></i> Spring：条件装配
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/24/Java序列化机制/" rel="prev" title="Java序列化机制">
+                Java序列化机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SpringBoot自动装配"><span class="nav-number">2.</span> <span class="nav-text">SpringBoot自动装配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加载应用上下文初始器ApplicationContextInitializer"><span class="nav-number">3.</span> <span class="nav-text">加载应用上下文初始器ApplicationContextInitializer</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#实现"><span class="nav-number">3.1.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#技术"><span class="nav-number">3.2.</span> <span class="nav-text">技术</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加载应用事件监听器ApplicationListener"><span class="nav-number">4.</span> <span class="nav-text">加载应用事件监听器ApplicationListener</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

@@ -1,0 +1,844 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hash,队列,缓存,bitmap," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="异步消息队列Redis 的 list(列表) 数据结构常用来作为异步消息队列使用，使用rpush/lpush操作入队列，使用lpop 和 rpop来出队列。 客户端是通过队列的 pop 操作来获取消息，然后进行处理。处理完了再接着获取消息，再进行处理。如此循环往复(while)，这便是作为队列消费者的客户端的生命周期。  如果队列空了，客户端就会陷入 pop 的死循环，不停地 pop，没有数据，接">
+<meta name="keywords" content="Hash,队列,缓存,bitmap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis应用总结">
+<meta property="og:url" content="https://anthonyzero.github.io/2020/06/19/Redis应用总结/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="异步消息队列Redis 的 list(列表) 数据结构常用来作为异步消息队列使用，使用rpush/lpush操作入队列，使用lpop 和 rpop来出队列。 客户端是通过队列的 pop 操作来获取消息，然后进行处理。处理完了再接着获取消息，再进行处理。如此循环往复(while)，这便是作为队列消费者的客户端的生命周期。  如果队列空了，客户端就会陷入 pop 的死循环，不停地 pop，没有数据，接">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2020/06/19/monaiSE52Rf8VZw.png">
+<meta property="og:image" content="https://i.loli.net/2020/06/19/XEZVzcDfGokgw3d.png">
+<meta property="og:image" content="https://i.loli.net/2020/06/19/Dcn6w94kq1I8sN2.png">
+<meta property="og:updated_time" content="2020-06-19T08:06:56.358Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis应用总结">
+<meta name="twitter:description" content="异步消息队列Redis 的 list(列表) 数据结构常用来作为异步消息队列使用，使用rpush/lpush操作入队列，使用lpop 和 rpop来出队列。 客户端是通过队列的 pop 操作来获取消息，然后进行处理。处理完了再接着获取消息，再进行处理。如此循环往复(while)，这便是作为队列消费者的客户端的生命周期。  如果队列空了，客户端就会陷入 pop 的死循环，不停地 pop，没有数据，接">
+<meta name="twitter:image" content="https://i.loli.net/2020/06/19/monaiSE52Rf8VZw.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2020/06/19/Redis应用总结/"/>
+
+
+
+
+
+  <title> Redis应用总结 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2020/06/19/Redis应用总结/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Redis应用总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-19T09:54:44+08:00">
+                2020-06-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="异步消息队列"><a href="#异步消息队列" class="headerlink" title="异步消息队列"></a>异步消息队列</h3><p>Redis 的 list(列表) 数据结构常用来作为异步消息队列使用，使用rpush/lpush操作入队列，使用lpop 和 rpop来出队列。<br><img src="https://i.loli.net/2020/06/19/monaiSE52Rf8VZw.png" alt="image.png"></p>
+<p>客户端是通过队列的 pop 操作来获取消息，然后进行处理。处理完了再接着获取消息，再进行处理。如此循环往复(while)，这便是作为队列消费者的客户端的生命周期。</p>
+<blockquote>
+<p>如果队列空了，客户端就会陷入 pop 的死循环，不停地 pop，没有数据，接着再 pop，又没有数据。这就是浪费生命的空轮询。空轮询不但拉高了客户端的 CPU，redis 的 QPS 也会被拉高。</p>
+</blockquote>
+<p>解决方法：<font color="red">用blpop/brpop替代前面的lpop/rpop</font>. 阻塞读在队列没有数据的时候，会立即进入休眠状态，一旦数据到来，则立刻醒过来。消息的延迟几乎为零</p>
+<a id="more"></a>
+<blockquote>
+<p>如果线程一直阻塞在哪里，Redis 的客户端连接就成了闲置连接，闲置过久，服务器一般会主动断开连接，减少闲置资源占用。这个时候blpop/brpop会抛出异常来。所以编写客户端消费者的时候要小心，注意捕获异常，还要重试。</p>
+</blockquote>
+<h3 id="延时队列"><a href="#延时队列" class="headerlink" title="延时队列"></a>延时队列</h3><p>做电商项目的时候会遇到如下场景</p>
+<ol>
+<li>订单下单后超过一小时用户未支付，需要关闭订单</li>
+<li>订单的评论如果7天未评价，系统需要自动产生一条评论</li>
+</ol>
+<p>这个时候就用到延时队列了，顾名思义就是需要延迟一段时间后执行。<font color="red">可以通过 Redis 的 zset(有序列表) 来实现。</font>我们将消息序列化成一个字符串作为 zset 的value，这个消息的到期处理时间作为score，然后用多个线程轮询 zset 获取到期的任务进行处理，<br>多个线程是为了保障可用性，万一挂了一个线程还有其它线程可以继续处理。因为有多个线程，所以需要考虑并发争抢任务，确保任务不能被多次执行。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//添加任务</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delay</span><span class="params">(T msg)</span> </span>&#123;</span><br><span class="line">  TaskItem&lt;T&gt; task = <span class="keyword">new</span> TaskItem&lt;T&gt;();</span><br><span class="line">  task.id = UUID.randomUUID().toString(); <span class="comment">// 分配唯一的 uuid</span></span><br><span class="line">  task.msg = msg;</span><br><span class="line">  String s = JSON.toJSONString(task); <span class="comment">// fastjson 序列化</span></span><br><span class="line">  jedis.zadd(queueKey, System.currentTimeMillis() + <span class="number">5000</span>, s); <span class="comment">// 塞入延时队列 ,5s 后再试</span></span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="comment">//拉任务</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">while</span> (!Thread.interrupted()) &#123;</span><br><span class="line">    <span class="comment">// 只取一条</span></span><br><span class="line">    Set&lt;String&gt; values = jedis.zrangeByScore(queueKey, <span class="number">0</span>, System.currentTimeMillis(), <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (values.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        Thread.sleep(<span class="number">500</span>); <span class="comment">// 歇会继续</span></span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    String s = values.iterator().next();</span><br><span class="line">    <span class="keyword">if</span> (jedis.zrem(queueKey, s) &gt; <span class="number">0</span>) &#123; <span class="comment">// 抢到了</span></span><br><span class="line">      TaskItem&lt;T&gt; task = JSON.parseObject(s, TaskType); <span class="comment">// fastjson 反序列化</span></span><br><span class="line">      <span class="keyword">this</span>.handleMsg(task.msg); <span class="comment">//业务处理</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>Redis 的 zrem 方法是多线程多进程争抢任务的关键，它的返回值决定了当前实例有没有抢到任务，</strong> 因为 loop 方法可能会被多个线程、多个进程调用，同一个任务可能会被多个进程线程抢到，通过 zrem 来决定唯一的属主。还可以优化为将 zrangebyscore和zrem使用lua脚本进行原子化操作。</p>
+<h3 id="位图"><a href="#位图" class="headerlink" title="位图"></a>位图</h3><p>位图不是特殊的数据结构，它的内容其实就是普通的字符串，也就是 byte 数组。我们可以使用普通的 get/set 直接获取和设置整个位图的内容，也可以使用位图操作 getbit/setbit 等将 byte 数组看成「位数组」来处理。<br><img src="https://i.loli.net/2020/06/19/XEZVzcDfGokgw3d.png" alt="image.png"></p>
+<p><strong>优点</strong>： 通过一个bit位来表示某个元素对应的值或者状态，8个bit可以组成一个Byte，及其节省空间。setbit和getbit的时间复杂度都是O(1)，其他位运算效率也高<br><strong>缺点</strong>： 本质上位只有0和1的区别，所以用位做业务数据记录，就不需要在意value的值。</p>
+<p>使用场景：可以计算用户日活、月活、留存率的统计；可以统计用户在线状态和人数; 用户签到等</p>
+<p>具体实施(日活 月活)：使用redis的位图bitmap</p>
+<ol>
+<li>设置一个key专门用来记录用户日活的，比如1号的key为active01.</li>
+<li>使用每个用户的唯一标识映射一个偏移量，比如使用user_id，这里可以把user_id换算成一个数字作为该用户在当天是否活跃偏移量(每个用户对应一个bit)</li>
+<li>用户登录则把该用户偏移量上的位值设置为1</li>
+<li>每天按日期生成一个位图（bitmap）</li>
+<li>计算日活则使用bitcount即可获得一个key的位值为1的量</li>
+<li>计算月活（一个月内登陆的用户去重总数）即可把30天的所有bitmap做or计算，然后再计算bitcount</li>
+</ol>
+<h3 id="HyperLogLog"><a href="#HyperLogLog" class="headerlink" title="HyperLogLog"></a>HyperLogLog</h3><p>如果要统计网站的PV(Page View)，你可以使用Redis计数器就好了，每来一个请求，调用一次incrby即可。</p>
+<p>但是如果要统计UV(Unique Visitor)就没那么简单呢，它需要去重，当然你肯定想到了Redis中的去重的Set集合，当一个请求过来使用sadd添加用户ID,通过scard取出集合的大小。但是如果上千万的UV，使用集合来统计，就非常浪费空间了。</p>
+<p>而Redis提供的HyperLogLog数据结构正是来解决这类统计问题的，当然在数据量很大的情况下，他会有一定的误差。HyperLogLog 提供不精确的去重计数方案，虽然不精确但是也不是非常不精确，标准误差是 0.81%</p>
+<p><strong>使用方法:</strong><br>HyperLogLog 提供了两个指令 pfadd 和 pfcount，根据字面意义很好理解，一个是增加计数，一个是获取计数。pfadd 用法和 set 集合的 sadd 是一样的，来一个用户 ID，就将用户 ID 塞进去就是。pfcount 和 scard 用法是一样的，直接获取计数值。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfadd uv_p1 user1</span><br><span class="line">(integer) <span class="number">1</span></span><br><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfcount uv_p1</span><br><span class="line">(integer) <span class="number">1</span></span><br><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfadd uv_p1 user2</span><br><span class="line">(integer) <span class="number">1</span></span><br><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfcount uv_p1</span><br><span class="line">(integer) <span class="number">2</span></span><br><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfadd uv_p1 user2</span><br><span class="line">(integer) <span class="number">0</span></span><br><span class="line"><span class="number">127.0</span>.0.1:<span class="number">6379</span>&gt; pfcount uv_p1</span><br><span class="line">(integer) <span class="number">2</span></span><br></pre></td></tr></table></figure></p>
+<p>HyperLogLog还提供了第三个指令 pfmerge，用于将多个 pf 计数值累加在一起形成一个新的 pf 值。<br>比如在网站中我们有两个内容差不多的页面，运营需要将两个页面的数据进行合并。其中页面的 UV 访问量也需要合并，这时候就可以使用pfmerge。</p>
+<blockquote>
+<p>如果用户id是连续的,也可以用bitmap来统计UV,时间+网页标示作为key,用户id为偏移量. 以前用过bitmap来做，setbit uv:day userid 1，空间占用大 利用率不高</p>
+</blockquote>
+<h3 id="布隆过滤器"><a href="#布隆过滤器" class="headerlink" title="布隆过滤器"></a>布隆过滤器</h3><p>Redis 官方提供的布隆过滤器到了 Redis 4.0 提供了插件功能之后才正式登场。布隆过滤器作为一个插件加载到 Redis Server 中，给 Redis 提供了强大的布隆去重功能。</p>
+<p><font color="red">当布隆过滤器说某个值存在时，这个值可能不存在；当它说不存在时，那就肯定不存在。</font> 布隆过滤器的原理就是一个大型的位数组和几个不一样的无偏 hash 函数。所谓无偏就是能够把元素的 hash 值算得比较均匀。</p>
+<p>布隆过滤器，作用和set类似（去重集合），优势是：极大的节省存储空间，不足是：稍微有些不准确，有误差；它的核心竞争力和HyperLogLog类似，节省存储空间</p>
+<p>主要命令有：</p>
+<ol>
+<li>bf.add 添加元素</li>
+<li>bf.exists 查询元素是否存在</li>
+<li>bf.madd 一次添加多个元素</li>
+<li>bf.mexists 一次查询多个元素是否存在</li>
+</ol>
+<p>在 redis 中有两个值决定布隆过滤器的准确率：</p>
+<ul>
+<li>error_rate：允许布隆过滤器的错误率，这个值越低过滤器的位数组的大小越大，占用空间也就越大。</li>
+<li>initial_size：布隆过滤器可以储存的元素个数，当实际存储的元素个数超过这个值之后，过滤器的准确率会下降。</li>
+</ul>
+<p>一个命令可以来设置这两个值:</p>
+<blockquote>
+<p>bf.reserve test 0.01 100  必须在add之前使用bf.reserve指令显式创建，如果对应的 key 已经存在，bf.reserve会报错。默认的error_rate是 0.01，默认的initial_size是 100。</p>
+</blockquote>
+<p>应用场景: 主要是解决大规模数据下不需要精确过滤的场景，如检查垃圾邮件地址，爬虫URL地址去重，解决缓存穿透问题等。</p>
+<h3 id="简单限流"><a href="#简单限流" class="headerlink" title="简单限流"></a>简单限流</h3><p>所谓的滑动时间算法指的是以当前时间为截止时间，往前取一定的时间，比如往前取 60s 的时间，如果要求每60s之内运行最大的访问数为100，此时算法的执行逻辑为，先清除 60s 之前的所有请求记录，再计算当前集合内请求数量是否大于设定的最大请求数 100，如果大于则执行限流拒绝策略，否则插入本次请求记录并返回可以正常执行的标识给客户端。<br><img src="https://i.loli.net/2020/06/19/Dcn6w94kq1I8sN2.png" alt="image.png"></p>
+<p>借助 Redis 的有序集合 ZSet 来实现时间窗口算法限流，实现的过程是先使用 ZSet 的 key 存储限流的 ID（通常是用户ID+行为ID），score 用来存储请求的时间，每次有请求访问来了之后，先清空之前时间窗口的访问量，统计现在时间窗口的个数和最大允许访问量对比，如果大于等于最大访问量则返回 false 执行限流操作，否则允许执行业务逻辑，并且在 ZSet 中添加一条有效的访问记录，代码如下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 限流方法（滑动时间算法）</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key      限流标识</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> period   限流时间范围（单位：秒）</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> maxCount 最大运行访问次数</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isPeriodLimiting</span><span class="params">(String key, <span class="keyword">int</span> period, <span class="keyword">int</span> maxCount)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> nowTs = System.currentTimeMillis(); <span class="comment">// 当前时间戳</span></span><br><span class="line">    <span class="comment">// 删除非时间段内的请求数据（清除老访问数据，比如 period=60 时，标识清除 60s 以前的请求记录）,剩下的都是时间窗口内的</span></span><br><span class="line">    jedis.zremrangeByScore(key, <span class="number">0</span>, nowTs - period * <span class="number">1000</span>);</span><br><span class="line">    <span class="keyword">long</span> currCount = jedis.zcard(key); <span class="comment">// 当前窗口内请求次数</span></span><br><span class="line">    <span class="keyword">if</span> (currCount &gt;= maxCount) &#123;</span><br><span class="line">        <span class="comment">// 超过最大请求次数，执行限流</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 未达到最大请求数，添加此次行为，并返回true代表可以正常执行业务</span></span><br><span class="line">    jedis.zadd(key, nowTs, <span class="string">""</span> + nowTs); <span class="comment">// value 保证不重复即可 </span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整体思路就是：每一个行为到来时，都维护一次时间窗口。将时间窗口外的记录全部清理掉，只保留窗口内的记录。zset 集合中只有 score 值非常重要，value 值没有特别的意义，只需要保证它是唯一的就可以了。在这就用时间戳即可</p>
+<p>滑动时间窗口的限流策略：比起incrby+过期时间计数器限流（在窗口边界可能有波动）而言 这样控制流量会更平滑</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Hash/" rel="tag"><i class="fa fa-tag"></i> Hash</a>
+          
+            <a href="/tags/队列/" rel="tag"><i class="fa fa-tag"></i> 队列</a>
+          
+            <a href="/tags/缓存/" rel="tag"><i class="fa fa-tag"></i> 缓存</a>
+          
+            <a href="/tags/bitmap/" rel="tag"><i class="fa fa-tag"></i> bitmap</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/08/TCP重传机制-流量控制/" rel="next" title="TCP重传机制/流量控制">
+                <i class="fa fa-chevron-left"></i> TCP重传机制/流量控制
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#异步消息队列"><span class="nav-number">1.</span> <span class="nav-text">异步消息队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#延时队列"><span class="nav-number">2.</span> <span class="nav-text">延时队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#位图"><span class="nav-number">3.</span> <span class="nav-text">位图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HyperLogLog"><span class="nav-number">4.</span> <span class="nav-text">HyperLogLog</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#布隆过滤器"><span class="nav-number">5.</span> <span class="nav-text">布隆过滤器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简单限流"><span class="nav-number">6.</span> <span class="nav-text">简单限流</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

@@ -1,0 +1,882 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="JUC,AQS," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言CountdownLatch 是 JDK 并发包中提供的并发工具类，其允许一个或多个线程等待其他线程完成操作。常用作将一个任务拆分成多个子任务同时执行，只有子任务都执行完毕主线程才往下执行。  例如应用程序的主线程希望在负责启动框架服务的线程已经启动所有的框架服务之后再执行。   当计数器总量大于0时，线程将被阻塞，不能够获取锁，只有当计数器总量为0时，所有被阻塞的线程同时被释放。  Coun">
+<meta name="keywords" content="JUC,AQS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JUC-CountDownLatch">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/12/27/JUC-CountDownLatch/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="前言CountdownLatch 是 JDK 并发包中提供的并发工具类，其允许一个或多个线程等待其他线程完成操作。常用作将一个任务拆分成多个子任务同时执行，只有子任务都执行完毕主线程才往下执行。  例如应用程序的主线程希望在负责启动框架服务的线程已经启动所有的框架服务之后再执行。   当计数器总量大于0时，线程将被阻塞，不能够获取锁，只有当计数器总量为0时，所有被阻塞的线程同时被释放。  Coun">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/coutdown.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.416Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JUC-CountDownLatch">
+<meta name="twitter:description" content="前言CountdownLatch 是 JDK 并发包中提供的并发工具类，其允许一个或多个线程等待其他线程完成操作。常用作将一个任务拆分成多个子任务同时执行，只有子任务都执行完毕主线程才往下执行。  例如应用程序的主线程希望在负责启动框架服务的线程已经启动所有的框架服务之后再执行。   当计数器总量大于0时，线程将被阻塞，不能够获取锁，只有当计数器总量为0时，所有被阻塞的线程同时被释放。  Coun">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/coutdown.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/12/27/JUC-CountDownLatch/"/>
+
+
+
+
+
+  <title> JUC-CountDownLatch | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/12/27/JUC-CountDownLatch/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                JUC-CountDownLatch
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-27T23:31:38+08:00">
+                2018-12-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>CountdownLatch 是 JDK 并发包中提供的并发工具类，其允许一个或多个线程等待其他线程完成操作。常用作将一个任务拆分成多个子任务同时执行，<font color="red">只有子任务都执行完毕主线程才往下执行。</font></p>
+<blockquote>
+<p>例如应用程序的主线程希望在负责启动框架服务的线程已经启动所有的框架服务之后再执行。</p>
+</blockquote>
+<blockquote>
+<p>当计数器总量大于0时，线程将被阻塞，不能够获取锁，只有当计数器总量为0时，所有被阻塞的线程同时被释放。</p>
+</blockquote>
+<p>CountDownLatch是通过一个计数器来实现的，计数器的初始值一般为线程的数量。每当一个线程完成了自己的任务后，计数器的值就会减1。当计数器的值为0时，表示所有的线程都已经完成了任务，然后在CountDownLatch上等待的线程就可以恢复执行任务。</p>
+<a id="more"></a>
+<p><img src="/images/coutdown.png" alt="Alt text"></p>
+<h3 id="CountDownLatch使用"><a href="#CountDownLatch使用" class="headerlink" title="CountDownLatch使用"></a>CountDownLatch使用</h3><pre><code>public class CountdownLatchExample {
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(10);
+        final int totalThread = 10;
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i &lt; totalThread; i++) {
+            int finalI = i;
+            executorService.execute(() -&gt; {
+                System.out.println(&quot;执行&quot; + finalI);
+                countDownLatch.countDown(); //-1
+            });
+        }
+        countDownLatch.await();
+        executorService.shutdown();
+        System.out.println(&quot;end&quot;);
+    }
+}
+
+执行1
+执行0
+执行4
+执行2
+执行5
+执行6
+执行8
+执行7
+执行3
+执行9
+end
+</code></pre><p>从结果中可以看出 main 主线程会在 10 个子线程处理完毕之后才继续执行。CountDownLatch的await方法会阻塞当前线程，直到计数器变成0.</p>
+<h3 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h3><pre><code>public CountDownLatch(int count) {
+    if (count &lt; 0) throw new IllegalArgumentException(&quot;count &lt; 0&quot;);
+    this.sync = new Sync(count);
+}
+</code></pre><p>CountDownLatch 与其他同步组件一样，内部类 Sync 继承了 AQS，构造的时候会指定子任务个数 count , 也即是同步状态初始值。</p>
+<h3 id="countDown-方法"><a href="#countDown-方法" class="headerlink" title="countDown()方法"></a>countDown()方法</h3><p>内部计数器减一，如果计数达到零，唤醒所有等待的线程。</p>
+<pre><code>//Decrements the count of the latch 每次释放1个计数
+public void countDown() {
+    sync.releaseShared(1);
+}
+
+public final boolean releaseShared(int arg) {
+    //如果内部计数器状态值递减后等于零
+    if (tryReleaseShared(arg)) {
+        //唤醒同步队列节点中的线程
+        doReleaseShared();
+        return true;
+    }
+    return false;
+}
+//尝试释放共享锁，即将内部计数器值减一
+protected boolean tryReleaseShared(int releases) {
+    // Decrement count; signal when transition to zero
+    for (;;) {
+        int c = getState();
+        if (c == 0)
+            return false;
+        int nextc = c-1;
+        //使用CAS修改state值
+        if (compareAndSetState(c, nextc))
+            return nextc == 0; //==0返回true 
+    }
+}
+</code></pre><p>从实现可以看出，每次子任务在调用 countDown 时，会将同步状态值减一。</p>
+<h3 id="await-方法"><a href="#await-方法" class="headerlink" title="await()方法"></a>await()方法</h3><p>当await()方法被调用时，当前线程会阻塞，直到内部计数器的值等于零或当前线程被中断</p>
+<pre><code>public void await() throws InterruptedException {
+    sync.acquireSharedInterruptibly(1);
+}
+public final void acquireSharedInterruptibly(int arg)
+        throws InterruptedException {
+    if (Thread.interrupted())
+        throw new InterruptedException();
+    //尝试获取共享锁，如果可以获取到锁直接返回；     
+    //如果获取不到锁，执行doAcquireSharedInterruptibly    
+    if (tryAcquireShared(arg) &lt; 0)
+        //该方法使当前线程一直等待，直到当前线程获取到共享锁或被中断才返回
+        doAcquireSharedInterruptibly(arg);
+}
+
+//如果当前内部计数器等于零返回1，否则返回-1；
+//内部计数器等于零表示可以获取共享锁，否则不可以；
+protected int tryAcquireShared(int acquires) {
+    return (getState() == 0) ? 1 : -1;
+}
+</code></pre><p>从实现可以看出 await() 方法执行时，当子任务未处理完毕时(state ！= 0)，调用线程会被添加到同步队列而阻塞等待。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>子任务在进行 countDown 操作时，最好是在 finally 块处理； 避免出现子任务处理异常，导致主线程一直阻塞的问题。</li>
+<li>计数器必须大于等于0，只是等于0的时候计算器就是零，调用await方法时不会阻塞当前线程。</li>
+<li>await(long timeout, TimeUnit unit)方法可以等待指定时间后，就会不再阻塞当前线程。</li>
+<li>当计数器达到0的时候，所有等待的线程都会释放，不为0的时候，所有等待的线程都会阻塞</li>
+<li>CountDownLatch实现了有限的AQS共享锁。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JUC/" rel="tag"><i class="fa fa-tag"></i> JUC</a>
+          
+            <a href="/tags/AQS/" rel="tag"><i class="fa fa-tag"></i> AQS</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/20/JUC-Fork-Join框架/" rel="next" title="JUC-Fork/Join框架">
+                <i class="fa fa-chevron-left"></i> JUC-Fork/Join框架
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/28/JUC-CyclicBarrier/" rel="prev" title="JUC-CyclicBarrier">
+                JUC-CyclicBarrier <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CountDownLatch使用"><span class="nav-number">2.</span> <span class="nav-text">CountDownLatch使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数"><span class="nav-number">3.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#countDown-方法"><span class="nav-number">4.</span> <span class="nav-text">countDown()方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#await-方法"><span class="nav-number">5.</span> <span class="nav-text">await()方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

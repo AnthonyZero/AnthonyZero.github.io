@@ -1,0 +1,873 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="线程池,阻塞队列," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
+<meta name="keywords" content="线程池,阻塞队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JAVA中的线程池">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/01/06/JAVA中的线程池/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/backgroud/thread.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/thread.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.335Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JAVA中的线程池">
+<meta name="twitter:description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/backgroud/thread.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/01/06/JAVA中的线程池/"/>
+
+
+
+
+
+  <title> JAVA中的线程池 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/01/06/JAVA中的线程池/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                JAVA中的线程池
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-06T18:56:18+08:00">
+                2019-01-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/images/backgroud/thread.png" alt="Alt text"></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在开发过程中，合理的使用线程池能够带来3个好处<br>第一：<strong>降低资源消耗</strong>,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗<br>第二：<strong>提高响应速度</strong>，当任务到达时任务可以不需要等待线程创建就能立即执行<br>第三：<strong>提高线程的可管理性</strong>，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控</p>
+<h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><p>如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图</p>
+<ol>
+<li>判断当前线程池线程数量是否小于核心线程池大小，是则创建线程并启动，否则到第2步</li>
+<li>判断任务队列是否已满，未满则将任务加入阻塞队列，已满则到第3步</li>
+<li>判断当前线程池线程数量是否小于最大线程池大小，是则创建线程并启动，否则执行饱和策略<a id="more"></a>
+<img src="/images/thread.png" alt="Alt text"></li>
+</ol>
+<blockquote>
+<p>当前运行的线程少于corePoolSize,直接创建新线程来执行任务（这是一个预热阶段，而且需要获取全局锁），后面当前运行的线程大于等于corePoolSize的时候，几乎所有的execute()方法调用都是执行步骤2，这步不需要获取全局锁</p>
+</blockquote>
+<p>通过ThreadPoolExecutor的execute方法源码了解线程池的工作原理</p>
+<pre><code>public void execute(Runnable command) {
+    //任务为空，抛出空指针异常
+    if (command == null)
+        throw new NullPointerException();
+    int c = ctl.get();
+    //判断当前线程数量是否小于核心线程数
+    if (workerCountOf(c) &lt; corePoolSize) {
+        //是则添加一个核心线程到线程池，并且启动线程执行任务（addWorker方法里会启动）
+        if (addWorker(command, true))
+            return;
+        c = ctl.get();
+    }
+    //线程池处于运行状态则向阻塞队列添加该任务
+    if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+        int recheck = ctl.get();
+        //判断线程池是否处于运行状态，不是就移除刚才添加的任务
+        if (! isRunning(recheck) &amp;&amp; remove(command))
+            //移除成功就执行饱和策略，这样整个方法就结束了
+            reject(command);
+        //否则若处于运行状态或移除失败，这时无论处于哪种情况任务都在阻塞队列里，判断当前线程数量是否为0
+        else if (workerCountOf(recheck) == 0)
+            //若是则添加一个线程并启动
+            addWorker(null, false);
+    }
+    else if (!addWorker(command, false))
+        reject(command);
+}
+</code></pre><blockquote>
+<p>线程池创建线程时，会将线程封装为工作线程Worker，Worker在执行完任务后，还会循环获取工作队列里的任务来执行。</p>
+</blockquote>
+<h3 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h3><p>我们可以通过ThreadPoolExecutor来创建一个线程池</p>
+<pre><code>public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue&lt;Runnable&gt; workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) {
+    this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+         Executors.defaultThreadFactory(), handler);
+}
+</code></pre><p><font color="red"><strong>corePoolSize</strong></font>:线程池中的核心线程数，默认情况下，核心线程一直存活在线程池中，即便他们在线程池中处于闲置状态。除非我们将ThreadPoolExecutor的allowCoreThreadTimeOut属性设为true的时候，这时候处于闲置的核心线程在等待新任务到来时会有超时策略，这个超时时间由keepAliveTime来指定。一旦超过所设置的超时时间，闲置的核心线程就会被终止。</p>
+<p><font color="red"><strong>maximumPoolSize</strong></font>:线程池中所容纳的最大线程数，如果队列满了并且已经创建的线程小于这个值，则线程会在创建新的线程执行任务。如果使用了无界队列这个参数就没什么效果。</p>
+<p><font color="red"><strong>keepAliveTime</strong></font>:线程池的工作线程空闲后，保持存活的时间。所以如果任务很多并且每个任务的执行时间比较短，可以调大时间提高线程的利用率</p>
+<p><font color="red"><strong>unit</strong></font>:用于指定keepAliveTime参数的时间单位。可以使用的单位有天（TimeUnit.DAYS），小时（TimeUnit.HOURS），分钟（TimeUnit.MINUTES），毫秒(TimeUnit.MILLISECONDS)等</p>
+<p><font color="red"><strong>workQueue</strong></font>:线程池中保存等待执行的任务的阻塞队列，可选择ArrayBlockingQueue，LinkedBlockingQueue，SynchronousQueue等</p>
+<p><font color="red"><strong>threadFactory</strong></font>: 线程工厂，为线程池提供新线程的创建。ThreadFactory是一个接口，里面只有一个newThread方法。 默认为DefaultThreadFactory类        </p>
+<p><font color="red"><strong>handler</strong></font>: 饱和策略，是RejectedExecutionHandler对象，而RejectedExecutionHandler是一个接口，里面只有一个rejectedExecution方法。当任务队列已满并且线程池中的活动线程已经达到所限定的最大值或者是无法成功执行任务，这时候ThreadPoolExecutor会调用RejectedExecutionHandler中的rejectedExecution方法。在ThreadPoolExecutor中有四个内部类实现了RejectedExecutionHandler接口。在线程池中它默认是AbortPolicy，在无法处理新任务时抛出RejectedExecutionException异常。</p>
+<h3 id="提交任务"><a href="#提交任务" class="headerlink" title="提交任务"></a>提交任务</h3><p><strong>execute</strong>: 当我们使用execute来提交任务时，由于execute方法没有返回值，所以说我们也就无法判定任务是否被线程池执行成功。</p>
+<pre><code>service.execute(new  Runnable() {
+    public void run() {
+        System.out.println(&quot;execute方式&quot;);
+    }
+});
+</code></pre><p><strong>submit</strong>: 当我们使用submit来提交任务时,它会返回一个future,我们就可以通过这个future来判断任务是否执行成功，还可以通过future的get方法来获取返回值.如果子线程任务没有完成，get方法会阻塞住直到任务完成，而使用get(long timeout, TimeUnit unit)方法则会阻塞一段时间后立即返回，这时候有可能任务并没有执行完。</p>
+<pre><code>Future&lt;Integer&gt; future = service.submit(new Callable&lt;Integer&gt;() {
+                @Override
+                public Integer call() throws Exception {
+                    System.out.println(&quot;submit方式&quot;);
+                    return 666;
+                }
+            });
+try {
+    Integer number = future.get();
+    System.out.println(&quot;返回值为：&quot; + number);
+} catch (ExecutionException e) {
+    // TODO Auto-generated catch block
+    e.printStackTrace();
+}
+</code></pre><h3 id="关闭线程池"><a href="#关闭线程池" class="headerlink" title="关闭线程池"></a>关闭线程池</h3><p>调用线程池的shutdown()或shutdownNow()方法来关闭线程池<br>shutdown原理：将线程池状态设置成SHUTDOWN状态，然后中断所有<strong>没有正在执行</strong>任务的线程，（已提交的任务会被继续执行）。<br>shutdownNow原理：将线程池的状态设置成STOP状态，然后中断所有任务(包括正在执行的)的线程，并返回等待执行任务的列表。</p>
+<p><strong>中断采用interrupt方法，所以无法响应中断的任务可能永远无法终止</strong> 但调用上述的两个关闭之一，isShutdown()方法都会返为true，当所有任务都已关闭后，才表示线程池关闭完成，这时候isTerminated()方法返为true。<br><strong>通常调用shutdown方法来关闭线程池，当需要立刻中断所有的线程，如果任务不一定要执行完的话，可直接调用shutdownNow()方法</strong></p>
+<h3 id="线程池监控"><a href="#线程池监控" class="headerlink" title="线程池监控"></a>线程池监控</h3><p>ThreadPoolExecutor提供的线程池监控相关方法<br>getPoolSize()：获取当前线程池大小<br>getQueue()：获取工作队列实例<br>getLargestPoolSize()：获取工作者线程数曾达到的最大数<br>getAliveCount()：获取线程池中正在执行任务的工作者线程数<br>getTaskCount()：获取线程池接收到的任务数<br>getCompletedTaskCount()：获取已处理完毕的任务数</p>
+<h3 id="合理配置线程池"><a href="#合理配置线程池" class="headerlink" title="合理配置线程池"></a>合理配置线程池</h3><p>通常我们是需要根据分析这批任务执行的性质来确定：</p>
+<ul>
+<li>IO 密集型任务：由于线程并不是一直在运行，所以可以尽可能的多配置线程，比如 CPU 个数 * 2</li>
+<li>CPU 密集型任务（大量复杂的运算）应当分配较少的线程，比如 CPU 个数 + 1相当的大小</li>
+<li>选择合适的阻塞队列（建议使用有界队列）：有界队列能增加系统的稳定性和预警能力。</li>
+<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲的时间就越长，那么线程数应该设置得越大，这样才能更好的利用CPU.</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/线程池/" rel="tag"><i class="fa fa-tag"></i> 线程池</a>
+          
+            <a href="/tags/阻塞队列/" rel="tag"><i class="fa fa-tag"></i> 阻塞队列</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/03/JUC-Semaphore/" rel="next" title="JUC-Semaphore">
+                <i class="fa fa-chevron-left"></i> JUC-Semaphore
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/15/线程池-Executor框架/" rel="prev" title="线程池:Executor框架">
+                线程池:Executor框架 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池的创建"><span class="nav-number">3.</span> <span class="nav-text">线程池的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#提交任务"><span class="nav-number">4.</span> <span class="nav-text">提交任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关闭线程池"><span class="nav-number">5.</span> <span class="nav-text">关闭线程池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池监控"><span class="nav-number">6.</span> <span class="nav-text">线程池监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#合理配置线程池"><span class="nav-number">7.</span> <span class="nav-text">合理配置线程池</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

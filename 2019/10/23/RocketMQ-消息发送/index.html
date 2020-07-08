@@ -1,0 +1,837 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MQ,Netty," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="RocketMQ-消息发送 由于消息发送还涉及到延迟发送，顺序发送，批量发送等情况，分享下自己看源码总结的一般同步发送消息逻辑。">
+<meta name="keywords" content="MQ,Netty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ-消息发送">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/10/23/RocketMQ-消息发送/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="RocketMQ-消息发送 由于消息发送还涉及到延迟发送，顺序发送，批量发送等情况，分享下自己看源码总结的一般同步发送消息逻辑。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2019/10/23/HPFKIQm1XoENSvZ.png">
+<meta property="og:updated_time" content="2019-10-23T14:01:37.249Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RocketMQ-消息发送">
+<meta name="twitter:description" content="RocketMQ-消息发送 由于消息发送还涉及到延迟发送，顺序发送，批量发送等情况，分享下自己看源码总结的一般同步发送消息逻辑。">
+<meta name="twitter:image" content="https://i.loli.net/2019/10/23/HPFKIQm1XoENSvZ.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/10/23/RocketMQ-消息发送/"/>
+
+
+
+
+
+  <title> RocketMQ-消息发送 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/10/23/RocketMQ-消息发送/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RocketMQ-消息发送
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-23T21:51:15+08:00">
+                2019-10-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="RocketMQ-消息发送"><a href="#RocketMQ-消息发送" class="headerlink" title="RocketMQ-消息发送"></a>RocketMQ-消息发送</h3><p><img src="https://i.loli.net/2019/10/23/HPFKIQm1XoENSvZ.png" alt="rocketmq.png"></p>
+<p>由于消息发送还涉及到延迟发送，顺序发送，批量发送等情况，分享下自己看源码总结的一般同步发送消息逻辑。</p>
+<a id="more"></a>
+<h3 id="Producer启动"><a href="#Producer启动" class="headerlink" title="Producer启动"></a>Producer启动</h3><p>跟进producer.start()实质调用了DefaultMQProducerImpl的start(),startFactory==true</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">public void start(final boolean startFactory) throws MQClientException &#123;</span><br><span class="line">        switch (this.serviceState) &#123;</span><br><span class="line">            case CREATE_JUST:</span><br><span class="line">                // 如果当前服务状态为CREATE_JUST【刚创建】</span><br><span class="line">                this.serviceState = ServiceState.START_FAILED;</span><br><span class="line">                //检查生产组是否符合要求</span><br><span class="line">                this.checkConfig();</span><br><span class="line"></span><br><span class="line">                if (!this.defaultMQProducer.getProducerGroup().equals(MixAll.CLIENT_INNER_PRODUCER_GROUP)) &#123;</span><br><span class="line">                    // 改变生产者的实例id为进程id </span><br><span class="line">                    this.defaultMQProducer.changeInstanceNameToPID();</span><br><span class="line">                &#125;</span><br><span class="line">                // 初始化一个MQ客户端工厂，同一个clientId只有一个MQClientInstance</span><br><span class="line">                this.mQClientFactory = MQClientManager.getInstance().getAndCreateMQClientInstance(this.defaultMQProducer, rpcHook);</span><br><span class="line">                // 注册生产者，将当前生产者加入到MQClientInstance中</span><br><span class="line">                boolean registerOK = mQClientFactory.registerProducer(this.defaultMQProducer.getProducerGroup(), this);</span><br><span class="line">                if (!registerOK) &#123;</span><br><span class="line">                    this.serviceState = ServiceState.CREATE_JUST;</span><br><span class="line">                    throw new MQClientException(&quot;The producer group[&quot; + this.defaultMQProducer.getProducerGroup()</span><br><span class="line">                        + &quot;] has been created before, specify another name please.&quot; + FAQUrl.suggestTodo(FAQUrl.GROUP_NAME_DUPLICATE_URL),</span><br><span class="line">                        null);</span><br><span class="line">                &#125;</span><br><span class="line">                // 注册成功则将当前生产者组对应的topic与发布关系放入topicPublishInfoTable注册表</span><br><span class="line">                this.topicPublishInfoTable.put(this.defaultMQProducer.getCreateTopicKey(), new TopicPublishInfo());</span><br><span class="line">                // 启动MQClientFactory，如果已经启动则不会再启动一次</span><br><span class="line">                if (startFactory) &#123;</span><br><span class="line">                    mQClientFactory.start();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                log.info(&quot;the producer [&#123;&#125;] start OK. sendMessageWithVIPChannel=&#123;&#125;&quot;, this.defaultMQProducer.getProducerGroup(),</span><br><span class="line">                    this.defaultMQProducer.isSendMessageWithVIPChannel());</span><br><span class="line">                this.serviceState = ServiceState.RUNNING;</span><br><span class="line">                break;</span><br><span class="line">            case RUNNING:</span><br><span class="line">            case START_FAILED:</span><br><span class="line">            case SHUTDOWN_ALREADY:</span><br><span class="line">                throw new MQClientException(&quot;The producer service state not OK, maybe started once, &quot;</span><br><span class="line">                    + this.serviceState</span><br><span class="line">                    + FAQUrl.suggestTodo(FAQUrl.CLIENT_SERVICE_NOT_OK),</span><br><span class="line">                    null);</span><br><span class="line">            default:</span><br><span class="line">                break;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        this.mQClientFactory.sendHeartbeatToAllBrokerWithLock();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>clientId=客户端ip+@+实例名+unitName（可选）,对于同一个JVM中的不同消费者和不同生产者在启动时候获取到的MQClientInstance是同一个。MQClientInstance是封装了网络调用相关的逻辑</p>
+</blockquote>
+<p>mQClientFactory.start():<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">public void start() throws MQClientException &#123;</span><br><span class="line">        // 同步当前实例</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            switch (this.serviceState) &#123;</span><br><span class="line">                case CREATE_JUST:</span><br><span class="line">                    this.serviceState = ServiceState.START_FAILED;</span><br><span class="line">                    // If not specified,looking address from name server</span><br><span class="line">                    if (null == this.clientConfig.getNamesrvAddr()) &#123;</span><br><span class="line">                        this.mQClientAPIImpl.fetchNameServerAddr();</span><br><span class="line">                    &#125;</span><br><span class="line">                    // 启动Netty客户端</span><br><span class="line">                    this.mQClientAPIImpl.start();</span><br><span class="line">                    // 开启定时任务</span><br><span class="line">                    this.startScheduledTask();</span><br><span class="line">                    //启动消息拉取线程</span><br><span class="line">                    this.pullMessageService.start();</span><br><span class="line">                    // 启动消息重负载线程</span><br><span class="line">                    this.rebalanceService.start();</span><br><span class="line">                    // Start push service</span><br><span class="line">                    this.defaultMQProducer.getDefaultMQProducerImpl().start(false);</span><br><span class="line">                    log.info(&quot;the client factory [&#123;&#125;] start OK&quot;, this.clientId);</span><br><span class="line">                    this.serviceState = ServiceState.RUNNING;</span><br><span class="line">                    break;</span><br><span class="line">                case RUNNING:</span><br><span class="line">                    break;</span><br><span class="line">                case SHUTDOWN_ALREADY:</span><br><span class="line">                    break;</span><br><span class="line">                case START_FAILED:</span><br><span class="line">                    throw new MQClientException(&quot;The Factory object[&quot; + this.getClientId() + &quot;] has been created before, and failed.&quot;, null);</span><br><span class="line">                default:</span><br><span class="line">                    break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>进入NettyRomoteClient的start(): 看到了熟悉的Netty的Bootstrap和pipeline了。pipeline中加入了编解码器 心跳检测 连接管理以及客户端handler处理<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">public void start() &#123;</span><br><span class="line">        this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(</span><br><span class="line">            nettyClientConfig.getClientWorkerThreads(),</span><br><span class="line">            new ThreadFactory() &#123;</span><br><span class="line"></span><br><span class="line">                private AtomicInteger threadIndex = new AtomicInteger(0);</span><br><span class="line"></span><br><span class="line">                @Override</span><br><span class="line">                public Thread newThread(Runnable r) &#123;</span><br><span class="line">                    return new Thread(r, &quot;NettyClientWorkerThread_&quot; + this.threadIndex.incrementAndGet());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">        Bootstrap handler = this.bootstrap.group(this.eventLoopGroupWorker).channel(NioSocketChannel.class)</span><br><span class="line">            .option(ChannelOption.TCP_NODELAY, true)</span><br><span class="line">            .option(ChannelOption.SO_KEEPALIVE, false)</span><br><span class="line">            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, nettyClientConfig.getConnectTimeoutMillis())</span><br><span class="line">            .option(ChannelOption.SO_SNDBUF, nettyClientConfig.getClientSocketSndBufSize())</span><br><span class="line">            .option(ChannelOption.SO_RCVBUF, nettyClientConfig.getClientSocketRcvBufSize())</span><br><span class="line">            .handler(new ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void initChannel(SocketChannel ch) throws Exception &#123;</span><br><span class="line">                    ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line">                    if (nettyClientConfig.isUseTLS()) &#123;</span><br><span class="line">                        if (null != sslContext) &#123;</span><br><span class="line">                            pipeline.addFirst(defaultEventExecutorGroup, &quot;sslHandler&quot;, sslContext.newHandler(ch.alloc()));</span><br><span class="line">                            log.info(&quot;Prepend SSL handler&quot;);</span><br><span class="line">                        &#125; else &#123;</span><br><span class="line">                            log.warn(&quot;Connections are insecure as SSLContext is null!&quot;);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    pipeline.addLast(</span><br><span class="line">                        defaultEventExecutorGroup,</span><br><span class="line">                        new NettyEncoder(),</span><br><span class="line">                        new NettyDecoder(),</span><br><span class="line">                        new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()),</span><br><span class="line">                        new NettyConnectManageHandler(),</span><br><span class="line">                        new NettyClientHandler());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">        this.timer.scheduleAtFixedRate(new TimerTask() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void run() &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    NettyRemotingClient.this.scanResponseTable();</span><br><span class="line">                &#125; catch (Throwable e) &#123;</span><br><span class="line">                    log.error(&quot;scanResponseTable exception&quot;, e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, 1000 * 3, 1000);</span><br><span class="line"></span><br><span class="line">        if (this.channelEventListener != null) &#123;</span><br><span class="line">            this.nettyEventExecutor.start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>到此，消息发送的必要条件：生产者启动过程就结束了，我们接着看一下消息发送的流程</p>
+<blockquote>
+<p>总结：NameServer提供轻量级的服务发现和路由，Producer和Consumer相当于Netty Client,而最重要的Broker充当Netty Server角色 通过提供轻量级的 Topic 和 Queue 机制来处理消息存储,同时支持推（push）和拉（pull）模式以及主从结构的容错机制。</p>
+</blockquote>
+<h3 id="同步发送消息"><a href="#同步发送消息" class="headerlink" title="同步发送消息"></a>同步发送消息</h3><p>从SendResult result = producer.send(msg)入手。消息对应的Topic信息以及具体内容被封装在了Message中，并交由DefaultMQProducer，调用send（）进行发送。DefaultMQProducer 只是一个面向调用方的代理，真正的生产者是DefaultMQProducerImpl，具体实现见sendDefaultImpl方法</p>
+<h4 id="寻找Topic对应的路由信息"><a href="#寻找Topic对应的路由信息" class="headerlink" title="寻找Topic对应的路由信息"></a>寻找Topic对应的路由信息</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">TopicPublishInfo topicPublishInfo = this.tryToFindTopicPublishInfo(msg.getTopic());</span><br><span class="line"></span><br><span class="line">private TopicPublishInfo tryToFindTopicPublishInfo(final String topic) &#123;</span><br><span class="line">    TopicPublishInfo topicPublishInfo = this.topicPublishInfoTable.get(topic);</span><br><span class="line">    if (null == topicPublishInfo || !topicPublishInfo.ok()) &#123;</span><br><span class="line">        this.topicPublishInfoTable.putIfAbsent(topic, new TopicPublishInfo());</span><br><span class="line">        this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic);</span><br><span class="line">        topicPublishInfo = this.topicPublishInfoTable.get(topic);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (topicPublishInfo.isHaveTopicRouterInfo() || topicPublishInfo.ok()) &#123;</span><br><span class="line">        return topicPublishInfo;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic, true, this.defaultMQProducer);</span><br><span class="line">        topicPublishInfo = this.topicPublishInfoTable.get(topic);</span><br><span class="line">        return topicPublishInfo;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>先从本地缓存的路由表中查询；</li>
+<li>没有找到的话，便向NameSrv发起请求，更新本地路由表，再次查询。</li>
+<li>如果仍然没有查询到，表明Topic没有事先配置，则用Topic TBW102向NameSrv发起查询，返回TBW102的路由信息，暂时作为Topic的路由。</li>
+</ol>
+<h4 id="选择消息要发送到的队列"><a href="#选择消息要发送到的队列" class="headerlink" title="选择消息要发送到的队列"></a>选择消息要发送到的队列</h4><p>根据topic路由表及broker名称，获取一个messageQueue，本次发送的队列就是选取的队列<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">MessageQueue mqSelected = this.selectOneMessageQueue(topicPublishInfo, lastBrokerName);</span><br><span class="line"></span><br><span class="line">public MessageQueue selectOneMessageQueue(final TopicPublishInfo tpInfo, final String lastBrokerName) &#123;</span><br><span class="line"></span><br><span class="line">    // 如果启用了broker故障延迟机制</span><br><span class="line">    if (this.sendLatencyFaultEnable) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 本次需要发送的队列的index就是SendWhichQueue自增得到的</span><br><span class="line">            int index = tpInfo.getSendWhichQueue().getAndIncrement();</span><br><span class="line">            for (int i = 0; i &lt; tpInfo.getMessageQueueList().size(); i++) &#123;</span><br><span class="line">                // index与当前路由表中的对列总个数取模</span><br><span class="line">                int pos = Math.abs(index++) % tpInfo.getMessageQueueList().size();</span><br><span class="line">                if (pos &lt; 0)</span><br><span class="line">                    pos = 0;</span><br><span class="line">                // 获取到当前对应的待发送队列</span><br><span class="line">                MessageQueue mq = tpInfo.getMessageQueueList().get(pos);</span><br><span class="line">                if (latencyFaultTolerance.isAvailable(mq.getBrokerName())) &#123;</span><br><span class="line">                    if (null == lastBrokerName || mq.getBrokerName().equals(lastBrokerName))</span><br><span class="line">                        return mq;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 至少选择一个broker</span><br><span class="line">            final String notBestBroker = latencyFaultTolerance.pickOneAtLeast();</span><br><span class="line">            // 获取broker中的可写队列数</span><br><span class="line">            int writeQueueNums = tpInfo.getQueueIdByBroker(notBestBroker);</span><br><span class="line">            // 如果可写队列数&gt;0,则选取一个队列</span><br><span class="line">            if (writeQueueNums &gt; 0) &#123;</span><br><span class="line">                final MessageQueue mq = tpInfo.selectOneMessageQueue();</span><br><span class="line">                if (notBestBroker != null) &#123;</span><br><span class="line">                    mq.setBrokerName(notBestBroker);</span><br><span class="line">                    mq.setQueueId(tpInfo.getSendWhichQueue().getAndIncrement() % writeQueueNums);</span><br><span class="line">                &#125;</span><br><span class="line">                return mq;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // 可写队列数 &lt;= 0 移除该broker</span><br><span class="line">                latencyFaultTolerance.remove(notBestBroker);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            log.error(&quot;Error occurred when selecting message queue&quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return tpInfo.selectOneMessageQueue();</span><br><span class="line">    &#125;</span><br><span class="line">    return tpInfo.selectOneMessageQueue(lastBrokerName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这段代码的核心就是进行队列的选取，选取的过程中伴随着负载均衡、故障检测，对于故障broker能够做到尽可能规避</p>
+<h4 id="发送的核心过程"><a href="#发送的核心过程" class="headerlink" title="发送的核心过程"></a>发送的核心过程</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">this.sendKernelImpl(msg, mq, communicationMode, sendCallback, topicPublishInfo, timeout - costTime)</span><br><span class="line"></span><br><span class="line">//获取Queue所属Broker的地址</span><br><span class="line">String brokerAddr = this.mQClientFactory.findBrokerAddressInPublish(mq.getBrokerName());</span><br><span class="line">if (null == brokerAddr) &#123;</span><br><span class="line">    tryToFindTopicPublishInfo(mq.getTopic());</span><br><span class="line">    brokerAddr = this.mQClientFactory.findBrokerAddressInPublish(mq.getBrokerName());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//将消息内容及其他信息封装进请求头</span><br><span class="line"> SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();</span><br><span class="line"> SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();</span><br><span class="line"> requestHeader.setProducerGroup(this.defaultMQProducer.getProducerGroup());</span><br><span class="line"> requestHeader.setTopic(msg.getTopic());</span><br><span class="line"> requestHeader.setDefaultTopic(this.defaultMQProducer.getCreateTopicKey());</span><br><span class="line"> requestHeader.setDefaultTopicQueueNums(this.defaultMQProducer.getDefaultTopicQueueNums());</span><br><span class="line"> requestHeader.setQueueId(mq.getQueueId());</span><br><span class="line"> ......</span><br><span class="line"> </span><br><span class="line"> //接着调用MQClientAPIImpl的sendMessage（）方法</span><br><span class="line">  sendResult = this.mQClientFactory.getMQClientAPIImpl().sendMessage(</span><br><span class="line">                             brokerAddr,</span><br><span class="line">                             mq.getBrokerName(),</span><br><span class="line">                             msg,</span><br><span class="line">                             requestHeader,</span><br><span class="line">                             timeout - costTimeSync,</span><br><span class="line">                             communicationMode,</span><br><span class="line">                             context,</span><br><span class="line">                             this);</span><br></pre></td></tr></table></figure>
+<p>sendMessage（）内部便是创建请求，按照发送方式调用不同的发送方法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">switch (communicationMode) &#123;</span><br><span class="line">    case ONEWAY:</span><br><span class="line">        this.remotingClient.invokeOneway(addr, request, timeoutMillis);</span><br><span class="line">        return null;</span><br><span class="line">    case ASYNC:</span><br><span class="line">        final AtomicInteger times = new AtomicInteger();</span><br><span class="line">        long costTimeAsync = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">        if (timeoutMillis &lt; costTimeAsync) &#123;</span><br><span class="line">            throw new RemotingTooMuchRequestException(&quot;sendMessage call timeout&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        this.sendMessageAsync(addr, brokerName, msg, timeoutMillis - costTimeAsync, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">            retryTimesWhenSendFailed, times, context, producer);</span><br><span class="line">        return null;</span><br><span class="line">    case SYNC:</span><br><span class="line">        long costTimeSync = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">        if (timeoutMillis &lt; costTimeSync) &#123;</span><br><span class="line">            throw new RemotingTooMuchRequestException(&quot;sendMessage call timeout&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        return this.sendMessageSync(addr, brokerName, msg, timeoutMillis - costTimeSync, request);</span><br><span class="line">    default:</span><br><span class="line">        assert false;</span><br><span class="line">        break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>单向：只管发送，不管是否发送成功；例如日志收集。  producer 只负责发送消息，不等待 broker 响应结果，而且也没有回调函数触发</li>
+<li>同步：阻塞至拿到发送结果；指 producer 发送消息后，会在接收到 broker 响应后才继续发下一条消息的通信方式。</li>
+<li>异步：发送后直接返回，在回调函数中等待发送结果</li>
+</ul>
+<p>接下来就是调用封装的Netty进行网络传输了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);</span><br><span class="line"></span><br><span class="line">//NettyRomotingClient类中</span><br><span class="line">//上句根据broker地址创建NIO的通信channel</span><br><span class="line"></span><br><span class="line">//执行发送前置钩子方法</span><br><span class="line">doBeforeRpcHooks(addr, request);</span><br><span class="line">long costTime = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">if (timeoutMillis &lt; costTime) &#123;</span><br><span class="line">    throw new RemotingTimeoutException(&quot;invokeSync call timeout&quot;);</span><br><span class="line">&#125;</span><br><span class="line">RemotingCommand response = this.invokeSyncImpl(channel, request, timeoutMillis - costTime);</span><br><span class="line">doAfterRpcHooks(RemotingHelper.parseChannelRemoteAddr(channel), request, response);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//NettyRomotingAbstract类中 实现</span><br><span class="line">public RemotingCommand invokeSyncImpl(final Channel channel, final RemotingCommand request,</span><br><span class="line">    final long timeoutMillis)</span><br><span class="line">    throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException &#123;</span><br><span class="line">    final int opaque = request.getOpaque();</span><br><span class="line"></span><br><span class="line">    try &#123;</span><br><span class="line">        final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis, null, null);</span><br><span class="line">        //把自增请求ID responseFuture放入到responseTable（ConcurrentMap）中，后面唤醒的时候根据这个ID拿到responseFuture</span><br><span class="line">        this.responseTable.put(opaque, responseFuture);</span><br><span class="line">        final SocketAddress addr = channel.remoteAddress();</span><br><span class="line">        channel.writeAndFlush(request).addListener(new ChannelFutureListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void operationComplete(ChannelFuture f) throws Exception &#123;</span><br><span class="line">                if (f.isSuccess()) &#123;</span><br><span class="line">                    //处理成功 等待唤醒</span><br><span class="line">                    responseFuture.setSendRequestOK(true);</span><br><span class="line">                    return;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    responseFuture.setSendRequestOK(false);</span><br><span class="line">                &#125;</span><br><span class="line">                //发送失败，直接唤醒 不进行阻塞了</span><br><span class="line">                responseTable.remove(opaque);</span><br><span class="line">                responseFuture.setCause(f.cause());</span><br><span class="line">                responseFuture.putResponse(null);</span><br><span class="line">                log.warn(&quot;send a request command to channel &lt;&quot; + addr + &quot;&gt; failed.&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        //阻塞等待 </span><br><span class="line">        RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);</span><br><span class="line">        if (null == responseCommand) &#123;</span><br><span class="line">            if (responseFuture.isSendRequestOK()) &#123;</span><br><span class="line">                throw new RemotingTimeoutException(RemotingHelper.parseSocketAddressAddr(addr), timeoutMillis,</span><br><span class="line">                    responseFuture.getCause());</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                throw new RemotingSendRequestException(RemotingHelper.parseSocketAddressAddr(addr), responseFuture.getCause());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return responseCommand;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        this.responseTable.remove(opaque);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>发送完毕之后，调用ResponseFuture的waitResponse方法使当前线程进行等待，使用 CountDownLatch.wait 方法实现，当 Netty 返回数据时，使用 CountDownLatch.countDown 进行唤醒，然后返回从 Broker 写入的结果，可能成功，也可能失败，需要到上层（Client层解析也就是<strong>NettyClientHandler</strong>处理），网络层只负责网络的事情。</p>
+<p>到这儿，消息的发送就已经结束了，成功的从生产者传输到了Broker。</p>
+<h3 id="处理返回"><a href="#处理返回" class="headerlink" title="处理返回"></a>处理返回</h3><p>客户端（Producer）通过NettyClientHandler会在 channelRead0 方法处理 Netty Server的返回值。见processMessageReceived 方法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public void processMessageReceived(ChannelHandlerContext ctx, RemotingCommand msg) throws Exception &#123;</span><br><span class="line">        final RemotingCommand cmd = msg;</span><br><span class="line">    if (cmd != null) &#123;</span><br><span class="line">        switch (cmd.getType()) &#123;</span><br><span class="line">            case REQUEST_COMMAND:</span><br><span class="line">                processRequestCommand(ctx, cmd);</span><br><span class="line">                break;</span><br><span class="line">            case RESPONSE_COMMAND:</span><br><span class="line">                processResponseCommand(ctx, cmd);</span><br><span class="line">                break;</span><br><span class="line">            default:</span><br><span class="line">                break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>分为处理Request请求和Response响应。我们看看处理Response响应</p>
+<pre><code>public void processResponseCommand(ChannelHandlerContext ctx, RemotingCommand cmd) {
+    final int opaque = cmd.getOpaque();
+    final ResponseFuture responseFuture = responseTable.get(opaque);
+    if (responseFuture != null) {
+        responseFuture.setResponseCommand(cmd);
+
+        responseTable.remove(opaque);
+
+        if (responseFuture.getInvokeCallback() != null) {
+            executeInvokeCallback(responseFuture);
+        } else {
+            responseFuture.putResponse(cmd);
+            responseFuture.release();
+        }
+    } else {
+        log.warn(&quot;receive response, but not matched any request, &quot; + RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
+        log.warn(cmd.toString());
+    }
+}
+
+</code></pre><p>通过cmd对象的RequestID找到ResponseFuture,执行 responseFuture.putResponse设置返回值，唤醒阻塞等待的发送线程。好，到这里，唤醒阻塞的发送线程，返回数据，客户端同步的发送消息就结束了</p>
+<p>看源码的过程是艰辛的，只有不断积累坚持才会有收获。继续加油！！！</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MQ/" rel="tag"><i class="fa fa-tag"></i> MQ</a>
+          
+            <a href="/tags/Netty/" rel="tag"><i class="fa fa-tag"></i> Netty</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/13/聊聊ThreadLocal/" rel="next" title="聊聊ThreadLocal">
+                <i class="fa fa-chevron-left"></i> 聊聊ThreadLocal
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/29/RocketMQ-消息存储/" rel="prev" title="RocketMQ-消息存储">
+                RocketMQ-消息存储 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RocketMQ-消息发送"><span class="nav-number">1.</span> <span class="nav-text">RocketMQ-消息发送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Producer启动"><span class="nav-number">2.</span> <span class="nav-text">Producer启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#同步发送消息"><span class="nav-number">3.</span> <span class="nav-text">同步发送消息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#寻找Topic对应的路由信息"><span class="nav-number">3.1.</span> <span class="nav-text">寻找Topic对应的路由信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#选择消息要发送到的队列"><span class="nav-number">3.2.</span> <span class="nav-text">选择消息要发送到的队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#发送的核心过程"><span class="nav-number">3.3.</span> <span class="nav-text">发送的核心过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#处理返回"><span class="nav-number">4.</span> <span class="nav-text">处理返回</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

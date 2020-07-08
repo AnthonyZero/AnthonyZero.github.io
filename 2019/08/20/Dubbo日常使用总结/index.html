@@ -1,0 +1,833 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="dubbo," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="keywords" content="dubbo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo日常使用总结">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/08/20/Dubbo日常使用总结/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2019/08/30/Swn7YbjNcFx69Is.png">
+<meta property="og:updated_time" content="2019-08-30T15:26:13.168Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dubbo日常使用总结">
+<meta name="twitter:image" content="https://i.loli.net/2019/08/30/Swn7YbjNcFx69Is.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/08/20/Dubbo日常使用总结/"/>
+
+
+
+
+
+  <title> Dubbo日常使用总结 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/08/20/Dubbo日常使用总结/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Dubbo日常使用总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-20T23:02:21+08:00">
+                2019-08-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SOA与微服务/" itemprop="url" rel="index">
+                    <span itemprop="name">SOA与微服务</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://i.loli.net/2019/08/30/Swn7YbjNcFx69Is.png" alt="dubbo"></p>
+<a id="more"></a>
+<h3 id="check启动检查"><a href="#check启动检查" class="headerlink" title="check启动检查"></a>check启动检查</h3><p>Dubbo 缺省会在启动时检查依赖的服务是否可用，不可用时会抛出异常，阻止 Spring 初始化完成，以便上线时，能及早发现问题，默认 check=”true”。</p>
+<p>可以通过 check=”false” 关闭检查，比如，测试时，有些服务不关心，或者出现了循环依赖，必须有一方先启动。</p>
+<p>如果容器懒加载，则需要关闭check以保证应用启动时对可能被懒加载引用的dubbo服务bean不要被检查</p>
+<blockquote>
+<p>设置为false则可以不影响应用的启动，后续服务初始化完成后<strong>依然可以正常连上</strong>。也就是说check=false的配置本身可以解决循环依赖的问题，只是如有加载了dubbo服务引用的bean要应用懒加载策略，需要check设为false来防止出现未完全装配的bean影响应用的正常运行。</p>
+</blockquote>
+<h3 id="超时-timeout-与重试机制-retires"><a href="#超时-timeout-与重试机制-retires" class="headerlink" title="超时(timeout)与重试机制(retires)"></a>超时(timeout)与重试机制(retires)</h3><p>dubbo通过设置短的超时机制＋重试次数，马上将当前超时服务提供者provider切换到其他可用的provider，通过这种思路实现快速响应。但对于一些新增大量记录的操作来说，有可能因为设定时间内，provider无法响应完成，客户端执行n次重试，导致新增记录操作的请求发了n次，数据库里这时候保存了n多条记录数据。暂时解决方式是将那些响应时间相对久一些的服务，它的超时时间设置长一点，并将重试次数retries设置为0</p>
+<blockquote>
+<p>超时机制的规则是如果在一定的时间内,provider没有返回，则认为本次调用失败<br>重试机制在出现调用失败时，会再次调用。如果在配置的调用次数内都失败，则认为此次请求异常，抛出异常。(dubbo默认重试2次)</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;dubbo:service <span class="class"><span class="keyword">interface</span></span>=<span class="string">"com.anthony.DempApiService"</span> ref=<span class="string">"dempApiService"</span> timeout=<span class="string">"12000"</span> retries=<span class="string">"0"</span>/&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="属性配置的优先级"><a href="#属性配置的优先级" class="headerlink" title="属性配置的优先级"></a>属性配置的优先级</h3><p>我们在dubbo的使用过程中会发现，提供者跟消费者中，很多属性是一样的，我们该怎么配呢？在dubbo的文档当中其实有推荐的用法。<br>    在提供者端尽量多提供消费者端的属性。原因如下：</p>
+<ul>
+<li>作为服务的提供方，比服务消费方更清楚服务的性能参数，如调用的超时时间、合理的重试次数等</li>
+<li>在 Provider 端配置后，Consumer 端不配置则会使用 Provider 端的配置，即 Provider 端的配置可以作为 Consumer 的缺省值 。否则，Consumer 会使用 Consumer端的全局设置，这对于 Provider 是不可控的，并且往往是不合理的.</li>
+</ul>
+<p>Provider 端尽量多配置 Consumer 端的属性，让 Provider 的实现者一开始就思考 Provider 端的服务特点和服务质量等问题。</p>
+<h3 id="dubbo使用内网ip"><a href="#dubbo使用内网ip" class="headerlink" title="dubbo使用内网ip"></a>dubbo使用内网ip</h3><p>正常情况下，我们的服务调用推荐走内网连接的方式，效率是比较高的。但是有些特殊的情况，我们需要dubbo注册服务的时候使用外网ip，该怎么修改呢？这时候就需要修改我们的服务器上 /etc/hosts 文件了，新增一条 “外网ip  主机名”的记录，restart我们的服务即可。</p>
+<h3 id="Mock机制"><a href="#Mock机制" class="headerlink" title="Mock机制"></a>Mock机制</h3><p>Mock是SOA之中的一个很有用的功能，不仅可以用来进行服务降级，也可以用来在测试中模拟服务调用的各种异常情况。dubbo框架里面的mock是在服务使用者这一端实现的</p>
+<p>在reference标签里，有一个参数mock，该参数有四个值，false,default,true,或者Mock类的类名。分别代表如下含义:</p>
+<ul>
+<li>false，不调用mock服务。</li>
+<li>true，当服务调用失败时，使用mock服务。</li>
+<li>default，当服务调用失败时，使用mock服务。</li>
+<li>force，强制使用Mock服务(不管服务能否调用成功)。(使用xml配置不生效,使用ReferenceConfigAPI可以生效)</li>
+</ul>
+<p>使用方法:</p>
+<ul>
+<li>将mock参数启用，在<a href="dubbo:reference" target="_blank" rel="noopener">dubbo:reference</a>中添加参数项mock=true。</li>
+<li>实现需要调用的服务接口, 且命名必须是该接口名+Mock，例如原接口是<strong>com.anthony.demo.DemoService</strong> 则实现类Class必须是<strong>com.anthony.demo.DemoServiceMock</strong>, 可以见到接口和Mock实现类在同一个package下面。</li>
+</ul>
+<h3 id="version参数：给服务设定版本"><a href="#version参数：给服务设定版本" class="headerlink" title="version参数：给服务设定版本"></a>version参数：给服务设定版本</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span>(version=<span class="string">"1.0.0"</span>)</span><br></pre></td></tr></table></figure>
+<p>一个Api服务可以有多个实现类，不同的版本并注册了多个地址到注册中心，消费者调用时，注入服务接口时加上版本。<br><strong>如果需要进行灰度发布，一半服务可以使用1.0.0版本的接口，一半可使用2.0.0的接口</strong></p>
+<blockquote>
+<p>如果生产者注册的服务设置了版本，消费者必须指定版本，如果生产者没设置版本，消费者可以不指定版本。官方推荐做法是设置版本</p>
+</blockquote>
+<h3 id="group参数"><a href="#group参数" class="headerlink" title="group参数"></a>group参数</h3><p>服务分组，当一个接口有多个实现，可以用分组区分</p>
+<p>如果版本号相同，服务注册到注册中心上只有一个地址，并且只代理其中一个实现类。</p>
+<p>现在两个实现类改成都是1.0.0版本，如果我们想要区分，必须加上group区分</p>
+<p>生产者设置了<strong>version</strong>和<strong>group</strong>，消费者调用时必须同时指定version和group</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span>(version=<span class="string">"1.0.0"</span>， group = <span class="string">"group1"</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@Reference</span>(version = <span class="string">"1.0.0"</span>,group = <span class="string">"group1"</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="Dubbo自定义异常"><a href="#Dubbo自定义异常" class="headerlink" title="Dubbo自定义异常"></a>Dubbo自定义异常</h3><p>项目使用了Dubbo进行不同系统服务间的调用，当服务端发生异常时，我们希望把异常传递给消费端，由消费端对异常进行捕获并处理。但在实际使用中，发现以往的异常处理在dubbo服务中并不能奏效。例如，自定义异常类BizException继承RuntimeException，当服务端抛出这个异常时，消费端并不能捕获它，而是返回了RuntimeException。</p>
+<p>通过Dubbo com.alibaba.dubbo.rpc.filter.ExceptionFilter源码了解到：</p>
+<ol>
+<li>如果是checked异常，直接抛出.很明显,我们的BizException继承RuntimeException,是未受检异常不符合要求。</li>
+<li>在方法签名上有声明，直接抛出</li>
+<li>异常类和接口类在同一jar包里，直接抛出.</li>
+<li>是JDK自带的异常，直接抛出.很明显,这个BizException是我们自定义的,不符合</li>
+<li>是Dubbo本身的异常(RpcException)，直接抛出.很明显,这个BizException是我们自定义的,和RpcException几乎没有半毛钱关系.</li>
+<li>否则，包装成RuntimeException抛给客户端.<br>因为以上6点均不满足,所以该异常会被包装成RuntimeException异常抛出(重要)</li>
+</ol>
+<p>如何解决：<br>一 在方法签名上显式声明异常，但代码侵入性高，基本所有接口都要写，不考虑。<br>二 将异常类与接口类放在同一个jar包中。本人采用的此方法</p>
+<font color="red"> 注意：本人在使用dubbo2.6.5的时候遇到provider 抛出的异常，consumer 捕获到的总是 java.lang.reflect.UndeclaredThrowableException，这是dubbo的bug已经在2.6.6版本修复。</font>
+
+
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/dubbo/" rel="tag"><i class="fa fa-tag"></i> dubbo</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/15/记一次MySQL-CPU高占用事件/" rel="next" title="记一次MySQL CPU高占用事件">
+                <i class="fa fa-chevron-left"></i> 记一次MySQL CPU高占用事件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/01/JVM-垃圾收集算法/" rel="prev" title="JVM-垃圾收集算法">
+                JVM-垃圾收集算法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#check启动检查"><span class="nav-number">1.</span> <span class="nav-text">check启动检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#超时-timeout-与重试机制-retires"><span class="nav-number">2.</span> <span class="nav-text">超时(timeout)与重试机制(retires)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#属性配置的优先级"><span class="nav-number">3.</span> <span class="nav-text">属性配置的优先级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dubbo使用内网ip"><span class="nav-number">4.</span> <span class="nav-text">dubbo使用内网ip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mock机制"><span class="nav-number">5.</span> <span class="nav-text">Mock机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#version参数：给服务设定版本"><span class="nav-number">6.</span> <span class="nav-text">version参数：给服务设定版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#group参数"><span class="nav-number">7.</span> <span class="nav-text">group参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dubbo自定义异常"><span class="nav-number">8.</span> <span class="nav-text">Dubbo自定义异常</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

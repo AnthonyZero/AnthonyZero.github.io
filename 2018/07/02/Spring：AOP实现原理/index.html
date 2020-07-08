@@ -1,0 +1,966 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="AOP,切面,代理模式," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="AOP概述AOP（Aspect Orient Programming），我们一般称为面向方面（切面）编程，作为面向对象的一种补充，用于处理系统中分布于各个模块的横切关注点，比如事务管理、日志、缓存等等。AOP实现的关键在于AOP框架自动创建的AOP代理，AOP代理主要分为静态代理和动态代理。允许通过分离应用的业务逻辑与系统级服务进行内聚性的开发。应用对象只实现它们应该做的——完成业务逻辑——仅此而">
+<meta name="keywords" content="AOP,切面,代理模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring：AOP实现原理">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/07/02/Spring：AOP实现原理/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="AOP概述AOP（Aspect Orient Programming），我们一般称为面向方面（切面）编程，作为面向对象的一种补充，用于处理系统中分布于各个模块的横切关注点，比如事务管理、日志、缓存等等。AOP实现的关键在于AOP框架自动创建的AOP代理，AOP代理主要分为静态代理和动态代理。允许通过分离应用的业务逻辑与系统级服务进行内聚性的开发。应用对象只实现它们应该做的——完成业务逻辑——仅此而">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/aop.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/aop1.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.541Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring：AOP实现原理">
+<meta name="twitter:description" content="AOP概述AOP（Aspect Orient Programming），我们一般称为面向方面（切面）编程，作为面向对象的一种补充，用于处理系统中分布于各个模块的横切关注点，比如事务管理、日志、缓存等等。AOP实现的关键在于AOP框架自动创建的AOP代理，AOP代理主要分为静态代理和动态代理。允许通过分离应用的业务逻辑与系统级服务进行内聚性的开发。应用对象只实现它们应该做的——完成业务逻辑——仅此而">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/aop.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/07/02/Spring：AOP实现原理/"/>
+
+
+
+
+
+  <title> Spring：AOP实现原理 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/07/02/Spring：AOP实现原理/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring：AOP实现原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-02T23:06:07+08:00">
+                2018-07-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="AOP概述"><a href="#AOP概述" class="headerlink" title="AOP概述"></a>AOP概述</h3><p>AOP（Aspect Orient Programming），我们一般称为面向方面（切面）编程，作为面向对象的一种补充，用于处理系统中分布于各个模块的横切关注点，比如事务管理、日志、缓存等等。AOP实现的关键在于AOP框架自动创建的AOP代理，AOP代理主要分为静态代理和动态代理。允许通过分离应用的业务逻辑与系统级服务进行内聚性的开发。应用对象只实现它们应该做的——完成业务逻辑——仅此而已。它们并不负责（甚至是意识）其它的系统级关注点，例如日志或事务支持。</p>
+<a id="more"></a>
+<h3 id="AOP中的基本概念"><a href="#AOP中的基本概念" class="headerlink" title="AOP中的基本概念"></a>AOP中的基本概念</h3><ol>
+<li>通知(Adivce) 通知有5种类型：<ul>
+<li>Before 在方法被调用之前调用</li>
+<li>After 在方法完成后调用通知，无论方法是否执行成功</li>
+<li>After-returning 在方法成功执行之后调用通知</li>
+<li>After-throwing 在方法抛出异常后调用通知</li>
+<li>Around 在被通知的方法调用之前后调用之后执行自定义的行为</li>
+</ul>
+</li>
+<li>切点（Pointcut）<br>切点在Spring AOP中确实是对应系统中的方法。但是这个方法是定义在切面中的方法，一般和通知一起使用，一起组成了切面。Spring使用了AspectJ的切点表达式语言来定义Spring切面。</li>
+<li>连接点（Join point）<br>所有可能的需要注入切面的地方。如方法前后、类初始化、属性初始化前后等等。</li>
+<li>切面（Aspect）<br>切面是切点和通知的集合，一般单独作为一个类。通知和切点共同定义了关于切面的全部内容，它是什么时候，在何时和何处完成功能。</li>
+<li>引入（Introduction）<br>允许我们向现有的类添加新方法属性。这不就是把切面（也就是新方法属性：通知定义的）用到目标类中吗</li>
+<li>织入（Weaving）<br>把切面应用到目标对象来创建新的代理对象的过程。</li>
+<li>目标（Target）<br>目标类，也就是要被通知的对象。也就是真正的业务逻辑，他可以在毫不知情的情况下，被咱们织入切面。而自己专注于业务本身的逻辑。</li>
+</ol>
+<h3 id="AOP各种实现机制的比较"><a href="#AOP各种实现机制的比较" class="headerlink" title="AOP各种实现机制的比较"></a>AOP各种实现机制的比较</h3><p><img src="/images/aop.png" alt="Alt text"></p>
+<h3 id="Spring-AOP如何实现"><a href="#Spring-AOP如何实现" class="headerlink" title="Spring AOP如何实现"></a>Spring AOP如何实现</h3><p><strong>AOP的实现实际上是用的是代理模式。</strong></p>
+<p>Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理。JDK动态代理通过反射来接收被代理的类，并且要求被代理的类必须实现一个接口。JDK动态代理的核心是InvocationHandler接口和Proxy类。JDK中所要进行动态代理的类必须要实现一个接口，也就是说只能对该类所实现接口中定义的方法进行代理，这在实际编程中具有一定的局限性，而且使用反射的效率也并不是很高。</p>
+<p>如果目标类没有实现接口，那么Spring AOP会选择使用CGLIB来动态代理目标类。CGLIB（Code Generation Library），是一个Code生成的类库，可以在运行时动态的生成某个类的子类，注意，CGLIB是通过继承的方式做的动态代理，因此如果某个类被标记为final，那么它是无法使用CGLIB做动态代理的。</p>
+<blockquote>
+<p>CGLIB原理：动态生成一个要代理类的子类，子类重写要代理的类的所有不是final的方法。在子类中采用方法拦截的技术拦截所有父类方法的调用，顺势织入横切逻辑。它比使用java反射的JDK动态代理要快。</p>
+</blockquote>
+<blockquote>
+<p>CGLIB底层：使用字节码处理框架ASM，来转换字节码并生成新的类。不鼓励直接使用ASM，因为它要求你必须对JVM内部结构包括class文件的格式和指令集都很熟悉。。</p>
+</blockquote>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>通过拓展点 BeanPostProcessor 接口。Spring AOP 抽象代理创建器实现了 BeanPostProcessor 接口，并在 bean 初始化后置处理过程中向 bean 中织入通知</p>
+<p>IOC 的源码 AbstractAutowireCapableBeanFactory</p>
+<pre><code>protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final Object[] args) throws BeanCreationException {
+
+    // Instantiate the bean.
+    BeanWrapper instanceWrapper = null;
+    if (mbd.isSingleton()) {
+        instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
+    }
+    if (instanceWrapper == null) {
+        // 1. 创建实例
+        instanceWrapper = createBeanInstance(beanName, mbd, args);
+    }
+    ...
+
+    // Initialize the bean instance.
+    Object exposedObject = bean;
+    try {
+        // 2. 装载属性
+        populateBean(beanName, mbd, instanceWrapper);
+        if (exposedObject != null) {
+            // 3. 初始化
+            exposedObject = initializeBean(beanName, exposedObject, mbd);
+        }
+    }
+    ...
+}
+</code></pre><p>在上述initializeBean(…) 方法中会调用 BeanPostProcessor 中的方法</p>
+<pre><code>protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd) {
+   ...
+   Object wrappedBean = bean;
+   if (mbd == null || !mbd.isSynthetic()) {
+      // 1. 执行每一个 BeanPostProcessor 的 postProcessBeforeInitialization 方法
+      wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+   }
+
+   try {
+      invokeInitMethods(beanName, wrappedBean, mbd);
+   }
+   ...
+   if (mbd == null || !mbd.isSynthetic()) {
+      // 我们关注的重点是这里！！！
+      // 2. 执行每一个 BeanPostProcessor 的 postProcessAfterInitialization 方法
+      wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+   }
+   return wrappedBean;
+}
+</code></pre><p>也就是说，Spring AOP 会在 IOC 容器创建 bean 实例的最后对 bean 进行处理。其实就是在这一步进行代理增强。</p>
+<pre><code>public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
+    implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware {
+
+    @Override
+    /** bean 初始化后置处理方法 */
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if (bean != null) {
+            Object cacheKey = getCacheKey(bean.getClass(), beanName);
+            if (!this.earlyProxyReferences.contains(cacheKey)) {
+                // 如果需要，为 bean 生成代理对象
+                return wrapIfNecessary(bean, beanName, cacheKey);
+            }
+        }
+        return bean;
+    }
+
+    protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+        if (beanName != null &amp;&amp; this.targetSourcedBeans.contains(beanName)) {
+            return bean;
+        }
+        if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
+            return bean;
+        }
+
+        /*
+         * 如果是基础设施类（Pointcut、Advice、Advisor 等接口的实现类），或是应该跳过的类，
+         * 则不应该生成代理，此时直接返回 bean
+         */ 
+        if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
+            // 将 &lt;cacheKey, FALSE&gt; 键值对放入缓存中，供上面的 if 分支使用
+            this.advisedBeans.put(cacheKey, Boolean.FALSE);
+            return bean;
+        }
+
+        // 为目标 bean 查找合适的通知器
+        Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
+        /*
+         * 若 specificInterceptors != null，即 specificInterceptors != DO_NOT_PROXY，
+         * 则为 bean 生成代理对象，否则直接返回 bean
+         */ 
+        if (specificInterceptors != DO_NOT_PROXY) {
+            this.advisedBeans.put(cacheKey, Boolean.TRUE);
+            // 创建代理
+            Object proxy = createProxy(
+                    bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
+            this.proxyTypes.put(cacheKey, proxy.getClass());
+            /*
+             * 创建代理...创建代理...创建代理...
+             * 返回代理对象，此时 IOC 容器输入 bean，得到 proxy。此时，
+             * beanName 对应的 bean 是代理对象，而非原始的 bean
+             */ 
+            return proxy;
+        }
+
+        this.advisedBeans.put(cacheKey, Boolean.FALSE);
+        // specificInterceptors = null，直接返回 bean
+        return bean;
+    }
+}
+</code></pre><p>接下来看createProxy(…) 方法，其实createProxy这个方法主要是在内部创建了一个 ProxyFactory 的实例，然后 set 了一大堆内容，剩下的工作就都是这个 ProxyFactory 实例的了，通过这个实例来创建代理:</p>
+<p>首先到 ProxyFactory#getProxy(classLoader) 方法，该方法首先通过 createAopProxy() 创建一个 AopProxy 的实例：</p>
+<pre><code>protected final synchronized AopProxy createAopProxy() {
+   if (!this.active) {
+      activate();
+   }
+   return getAopProxyFactory().createAopProxy(this);
+}
+</code></pre><p>创建 AopProxy 之前，我们需要一个 AopProxyFactory 实例，然后看 ProxyCreatorSupport 的构造方法：</p>
+<pre><code>public ProxyCreatorSupport() {
+   this.aopProxyFactory = new DefaultAopProxyFactory();
+}
+</code></pre><p>这样就将我们导到 DefaultAopProxyFactory 这个类了，我们看它的 createAopProxy(…) 方法：</p>
+<pre><code>@Override
+public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+    if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+        Class&lt;?&gt; targetClass = config.getTargetClass();
+        if (targetClass == null) {
+            throw new AopConfigException(&quot;TargetSource cannot determine target class: &quot; +
+                    &quot;Either an interface or a target is required for proxy creation.&quot;);
+        }
+        if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+            return new JdkDynamicAopProxy(config);
+        }
+        return new ObjenesisCglibAopProxy(config);
+    }
+    else {
+        return new JdkDynamicAopProxy(config);
+    }
+}
+
+// 判断是否有实现自定义的接口
+private boolean hasNoUserSuppliedProxyInterfaces(AdvisedSupport config) {
+    Class&lt;?&gt;[] ifcs = config.getProxiedInterfaces();
+    return (ifcs.length == 0 || (ifcs.length == 1 &amp;&amp; SpringProxy.class.isAssignableFrom(ifcs[0])));
+}
+</code></pre><p>到这里，我们知道 createAopProxy 方法有可能返回 JdkDynamicAopProxy 实例，也有可能返回 ObjenesisCglibAopProxy 实例，这里总结一下：</p>
+<p>如果被代理的目标类实现了一个或多个自定义的接口，那么就会使用 JDK 动态代理，如果没有实现任何接口，会使用 CGLIB 实现代理，如果设置了 proxy-target-class=”true”，那么都会使用 CGLIB。</p>
+<p><img src="/images/aop1.png" alt="Alt text"></p>
+<h3 id="AOP可实现功能"><a href="#AOP可实现功能" class="headerlink" title="AOP可实现功能"></a>AOP可实现功能</h3><ul>
+<li>性能监控：在方法调用前后记录调用时间，方法执行太长或超时报警</li>
+<li>缓存代理：缓存某方法的返回值，下次执行该方法时，直接从缓存里获取</li>
+<li>软件破解：使用AOP修改软件的验证类的判断逻辑</li>
+<li>记录日志：在方法执行前后记录系统日志</li>
+<li>工作流系统：工作流系统需要将业务代码和流程引擎代码混合在一起执行，那么我们可以使用AOP将其分离，并动态挂接业务</li>
+<li>权限验证：方法执行前验证是否有权限执行当前方法，没有则抛出没有权限执行异常，由业务代码捕捉</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本文主要讲了Spring AOP的一些基础概念性，引出了AOP的实现原理，最主要的还是浅显地跟着源码理解了AOP的一些基础东西。<br>Spring在运行期，生成动态代理对象，不需要特殊的编译器。Spring AOP的原理是通过JDK的动态代理或者CGLIB动态代理技术为目标Bean执行横向切入。Spring只支持方法连接点，不提供属性连接。JDK动态代理机制是委托机制，不需要依赖第三方的库，只要JDK环境就可以进行代理，动态实现接口类，在动态生成的实现类里面委托为hanlder去调用原始实现类方法；CGLib 必须依赖于CGLib的类库，使用的是继承机制，是被代理类和代理类继承的关系</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/AOP/" rel="tag"><i class="fa fa-tag"></i> AOP</a>
+          
+            <a href="/tags/切面/" rel="tag"><i class="fa fa-tag"></i> 切面</a>
+          
+            <a href="/tags/代理模式/" rel="tag"><i class="fa fa-tag"></i> 代理模式</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/12/Java字节码增强/" rel="next" title="Java字节码增强">
+                <i class="fa fa-chevron-left"></i> Java字节码增强
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/12/Spring-条件装配/" rel="prev" title="Spring：条件装配">
+                Spring：条件装配 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#AOP概述"><span class="nav-number">1.</span> <span class="nav-text">AOP概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOP中的基本概念"><span class="nav-number">2.</span> <span class="nav-text">AOP中的基本概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOP各种实现机制的比较"><span class="nav-number">3.</span> <span class="nav-text">AOP各种实现机制的比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring-AOP如何实现"><span class="nav-number">4.</span> <span class="nav-text">Spring AOP如何实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">5.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOP可实现功能"><span class="nav-number">6.</span> <span class="nav-text">AOP可实现功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

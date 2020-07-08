@@ -1,0 +1,800 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MQ," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="在上篇博客RocketMQ-消息存储中，已经看到了消息是如何从 Broker 最终存储到MappedFile内存缓冲区中的，但是此时消息存储的任务并没有完成，因为消息还没有刷盘，即存储到文件中，本篇继续探索RocketMQ是如何进行消息刷盘的。 刷盘策略CommitLog在初始化的时候，见构造方法 会根据配置，启动两种不同的刷盘策略。123456if (FlushDiskType.SYNC_FLU">
+<meta name="keywords" content="MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ-刷盘策略">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/10/30/RocketMQ-刷盘策略/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="在上篇博客RocketMQ-消息存储中，已经看到了消息是如何从 Broker 最终存储到MappedFile内存缓冲区中的，但是此时消息存储的任务并没有完成，因为消息还没有刷盘，即存储到文件中，本篇继续探索RocketMQ是如何进行消息刷盘的。 刷盘策略CommitLog在初始化的时候，见构造方法 会根据配置，启动两种不同的刷盘策略。123456if (FlushDiskType.SYNC_FLU">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-10-30T13:46:48.781Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RocketMQ-刷盘策略">
+<meta name="twitter:description" content="在上篇博客RocketMQ-消息存储中，已经看到了消息是如何从 Broker 最终存储到MappedFile内存缓冲区中的，但是此时消息存储的任务并没有完成，因为消息还没有刷盘，即存储到文件中，本篇继续探索RocketMQ是如何进行消息刷盘的。 刷盘策略CommitLog在初始化的时候，见构造方法 会根据配置，启动两种不同的刷盘策略。123456if (FlushDiskType.SYNC_FLU">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/10/30/RocketMQ-刷盘策略/"/>
+
+
+
+
+
+  <title> RocketMQ-刷盘策略 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/10/30/RocketMQ-刷盘策略/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RocketMQ-刷盘策略
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-30T21:40:43+08:00">
+                2019-10-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在上篇博客RocketMQ-消息存储中，已经看到了消息是如何从 Broker 最终存储到MappedFile内存缓冲区中的，但是此时消息存储的任务并没有完成，因为消息还没有刷盘，即存储到文件中，本篇继续探索RocketMQ是如何进行消息刷盘的。</p>
+<h3 id="刷盘策略"><a href="#刷盘策略" class="headerlink" title="刷盘策略"></a>刷盘策略</h3><p>CommitLog在初始化的时候，见构造方法 会根据配置，启动两种不同的刷盘策略。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if (FlushDiskType.SYNC_FLUSH == defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) &#123;</span><br><span class="line">    this.flushCommitLogService = new GroupCommitService();</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    this.flushCommitLogService = new FlushRealTimeService();</span><br><span class="line">&#125;</span><br><span class="line">this.commitLogService = new CommitRealTimeService();</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>CommitRealTimeService：异步刷盘并且开启内存字节缓冲区</li>
+<li>FlushRealTimeService：异步刷盘但是不开启内存字节缓冲区</li>
+<li>GroupCommitService：同步刷盘</li>
+</ul>
+<p>同步刷盘：当消息追加到内存后，就立即刷到文件中存储<br>异步刷盘：当消息追加到内存中，并不是立即刷到文件中，而是在后台任务中进行异步操作</p>
+<a id="more"></a>
+<h3 id="handleDiskFlush"><a href="#handleDiskFlush" class="headerlink" title="handleDiskFlush()"></a>handleDiskFlush()</h3><p>上一篇在CommitLog在putMessage（）中收到MappedFile成功追加消息到内存的结果后，便会调用handleDiskFlush（）方法进行刷盘，将消息存储到文件中。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public void handleDiskFlush(AppendMessageResult result, PutMessageResult putMessageResult, MessageExt messageExt) &#123;</span><br><span class="line">    // Synchronization flush</span><br><span class="line">    if (FlushDiskType.SYNC_FLUSH == this.defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) &#123;</span><br><span class="line">        final GroupCommitService service = (GroupCommitService) this.flushCommitLogService;</span><br><span class="line">        if (messageExt.isWaitStoreMsgOK()) &#123;</span><br><span class="line">            GroupCommitRequest request = new GroupCommitRequest(result.getWroteOffset() + result.getWroteBytes());</span><br><span class="line">            //提交刷盘请求(异步)</span><br><span class="line">            service.putRequest(request);</span><br><span class="line">            //同步等待刷盘结果，刷盘失败也会标志消息存储失败，返回 FLUSH_DISK_TIMEOUT</span><br><span class="line">            boolean flushOK = request.waitForFlush(this.defaultMessageStore.getMessageStoreConfig().getSyncFlushTimeout());</span><br><span class="line">            if (!flushOK) &#123;</span><br><span class="line">                log.error(&quot;do groupcommit, wait for flush failed, topic: &quot; + messageExt.getTopic() + &quot; tags: &quot; + messageExt.getTags()</span><br><span class="line">                    + &quot; client address: &quot; + messageExt.getBornHostString());</span><br><span class="line">                putMessageResult.setPutMessageStatus(PutMessageStatus.FLUSH_DISK_TIMEOUT);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            service.wakeup();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    // Asynchronous flush</span><br><span class="line">    else &#123;</span><br><span class="line">        if (!this.defaultMessageStore.getMessageStoreConfig().isTransientStorePoolEnable()) &#123;</span><br><span class="line">            flushCommitLogService.wakeup();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            commitLogService.wakeup();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="同步刷盘"><a href="#同步刷盘" class="headerlink" title="同步刷盘"></a>同步刷盘</h3><p>如果刷盘策略是同步刷盘（GroupCommitService）。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">class GroupCommitService extends FlushCommitLogService &#123;</span><br><span class="line">    //request写入队列，和read队列切换</span><br><span class="line">    private volatile List&lt;GroupCommitRequest&gt; requestsWrite = new ArrayList&lt;GroupCommitRequest&gt;();</span><br><span class="line">    //request读队列，和write队列切换</span><br><span class="line">    private volatile List&lt;GroupCommitRequest&gt; requestsRead = new ArrayList&lt;GroupCommitRequest&gt;();</span><br><span class="line">    public synchronized void putRequest(final GroupCommitRequest request) &#123;</span><br><span class="line">         // 添加写入请求</span><br><span class="line">        synchronized (this.requestsWrite) &#123;</span><br><span class="line">            this.requestsWrite.add(request);</span><br><span class="line">        &#125;</span><br><span class="line">        // 切换读写队列</span><br><span class="line">        if (hasNotified.compareAndSet(false, true)) &#123;</span><br><span class="line">            waitPoint.countDown(); // notify</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    //读写队列切换 避免产生锁竞争</span><br><span class="line">    private void swapRequests() &#123;</span><br><span class="line">        List&lt;GroupCommitRequest&gt; tmp = this.requestsWrite;</span><br><span class="line">        this.requestsWrite = this.requestsRead;</span><br><span class="line">        this.requestsRead = tmp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void doCommit() &#123;</span><br><span class="line">        synchronized (this.requestsRead) &#123;</span><br><span class="line">            if (!this.requestsRead.isEmpty()) &#123;</span><br><span class="line">                for (GroupCommitRequest req : this.requestsRead) &#123;</span><br><span class="line">                    boolean flushOK = false;</span><br><span class="line">                    //考虑到有可能每次循环的消息写入的消息，可能分布在两个 MappedFile(写第N个消息时，MappedFile 已满，创建了一个新的)，所以需要有循环2次。</span><br><span class="line">                    for (int i = 0; i &lt; 2 &amp;&amp; !flushOK; i++) &#123;</span><br><span class="line">                        //是否满足需要flush条件，即请求的offset超过flush的offset</span><br><span class="line">                        flushOK = CommitLog.this.mappedFileQueue.getFlushedWhere() &gt;= req.getNextOffset();</span><br><span class="line"></span><br><span class="line">                        if (!flushOK) &#123;</span><br><span class="line">                            CommitLog.this.mappedFileQueue.flush(0);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    //唤醒等待写入请求线程，通过 CountDownLatch 实现。</span><br><span class="line">                    req.wakeupCustomer(flushOK);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                long storeTimestamp = CommitLog.this.mappedFileQueue.getStoreTimestamp();</span><br><span class="line">                if (storeTimestamp &gt; 0) &#123;</span><br><span class="line">                    CommitLog.this.defaultMessageStore.getStoreCheckpoint().setPhysicMsgTimestamp(storeTimestamp);</span><br><span class="line">                &#125;</span><br><span class="line">                // 清理读取队列</span><br><span class="line">                this.requestsRead.clear();</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // Because of individual messages is set to not sync flush, it</span><br><span class="line">                // will come to this process</span><br><span class="line">                CommitLog.this.mappedFileQueue.flush(0);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        CommitLog.log.info(this.getServiceName() + &quot; service started&quot;);</span><br><span class="line"></span><br><span class="line">        while (!this.isStopped()) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                this.waitForRunning(10);</span><br><span class="line">                this.doCommit();</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                CommitLog.log.warn(this.getServiceName() + &quot; service has exception. &quot;, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Under normal circumstances shutdown, wait for the arrival of the</span><br><span class="line">        // request, and then flush</span><br><span class="line">        try &#123;</span><br><span class="line">            Thread.sleep(10);</span><br><span class="line">        &#125; catch (InterruptedException e) &#123;</span><br><span class="line">            CommitLog.log.warn(&quot;GroupCommitService Exception, &quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            this.swapRequests();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        this.doCommit();</span><br><span class="line"></span><br><span class="line">        CommitLog.log.info(this.getServiceName() + &quot; service end&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>GroupCommitService 被唤醒后，便会将 requestsWrite 中的请求交换到 requestsRead中。在启动后会在死循环中run()调用doCommit（）方法，而doCommit（）则不断遍历requestsRead中的请求，进行处理：最终调用了CommitLog.this.mappedFileQueue.flush(0) 来进行刷盘</p>
+<blockquote>
+<p>同步刷盘的任务虽然也是在异步线程中执行，但是消息存储的主流程中会同步(GroupCommitRequest中countDownLatch)等待刷盘结果，所以本质上还是同步操作</p>
+</blockquote>
+<h3 id="异步刷盘"><a href="#异步刷盘" class="headerlink" title="异步刷盘"></a>异步刷盘</h3><p>FlushRealTimeService：消息插入成功时，异步刷盘时使用。代码如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">//周期性的进行刷盘操作</span><br><span class="line">while (!this.isStopped()) &#123;</span><br><span class="line">    // 休眠策略，为 true 时，调用 Thread.sleep()休眠，为false时，调用wait（）休眠，默认 false</span><br><span class="line">    boolean flushCommitLogTimed = CommitLog.this.defaultMessageStore.getMessageStoreConfig().isFlushCommitLogTimed();</span><br><span class="line">    // 获取刷盘周期，默认为 500 ms</span><br><span class="line">    int interval = CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushIntervalCommitLog();</span><br><span class="line">    // 每次刷盘至少要刷多少页内容，每页大小为 4 k，默认每次要刷 4 页</span><br><span class="line">    int flushPhysicQueueLeastPages = CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushCommitLogLeastPages();</span><br><span class="line">    // 两次刷写之间的最大时间间隔，默认 10 s</span><br><span class="line">    int flushPhysicQueueThoroughInterval =</span><br><span class="line">        CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushCommitLogThoroughInterval();</span><br><span class="line"></span><br><span class="line">    boolean printFlushProgress = false;</span><br><span class="line"></span><br><span class="line">    // Print flush progress</span><br><span class="line">    long currentTimeMillis = System.currentTimeMillis();</span><br><span class="line">    // 判断当前时间距离上次刷盘时间是否已经超出设置的两次刷盘最大间隔</span><br><span class="line">    if (currentTimeMillis &gt;= (this.lastFlushTimestamp + flushPhysicQueueThoroughInterval)) &#123;</span><br><span class="line">        this.lastFlushTimestamp = currentTimeMillis;</span><br><span class="line">        // 如果已经超时，则将flushPhysicQueueLeastPages设置为0，表明将所有内存缓存全部刷盘到文件中</span><br><span class="line">        flushPhysicQueueLeastPages = 0;</span><br><span class="line">        printFlushProgress = (printTimes++ % 10) == 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    try &#123;</span><br><span class="line">         // 根据不同休眠策略，进行休眠等待</span><br><span class="line">        if (flushCommitLogTimed) &#123;</span><br><span class="line">            Thread.sleep(interval);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            this.waitForRunning(interval);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (printFlushProgress) &#123;</span><br><span class="line">            this.printFlushProgress();</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        long begin = System.currentTimeMillis();</span><br><span class="line">         // 休眠结束，开始执行刷盘操作</span><br><span class="line">        CommitLog.this.mappedFileQueue.flush(flushPhysicQueueLeastPages);</span><br><span class="line">        long storeTimestamp = CommitLog.this.mappedFileQueue.getStoreTimestamp();</span><br><span class="line">        if (storeTimestamp &gt; 0) &#123;</span><br><span class="line">            CommitLog.this.defaultMessageStore.getStoreCheckpoint().setPhysicMsgTimestamp(storeTimestamp);</span><br><span class="line">        &#125;</span><br><span class="line">        long past = System.currentTimeMillis() - begin;</span><br><span class="line">        if (past &gt; 500) &#123;</span><br><span class="line">            log.info(&quot;Flush data to disk costs &#123;&#125; ms&quot;, past);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; catch (Throwable e) &#123;</span><br><span class="line">        CommitLog.log.warn(this.getServiceName() + &quot; service has exception. &quot;, e);</span><br><span class="line">        this.printFlushProgress();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过上面这段逻辑可知，异步刷盘就在异步线程中，周期性的将内存缓冲区的内容刷到文件中，在消息主流程中，只会唤醒异步刷盘线程，而不会同步等待刷盘结果，所以称为异步刷盘。（CommitRealTimeService和 FlushRealTimeService 类似，性能更好）</p>
+<h3 id="MappedFile落盘"><a href="#MappedFile落盘" class="headerlink" title="MappedFile落盘"></a>MappedFile落盘</h3><p>无论是上面哪种刷盘策略，最终都调用了下面这个方法进行数据落地：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">CommitLog.this.mappedFileQueue.flush(flushPhysicQueueLeastPages);</span><br><span class="line"></span><br><span class="line">public boolean flush(final int flushLeastPages) &#123;</span><br><span class="line">     boolean result = true;</span><br><span class="line">     //从mappedFileQueue保存的所有MappedFile中，找出所要刷盘的MappedFile</span><br><span class="line">     MappedFile mappedFile = this.findMappedFileByOffset(this.flushedWhere, this.flushedWhere == 0);</span><br><span class="line">     if (mappedFile != null) &#123;</span><br><span class="line">         long tmpTimeStamp = mappedFile.getStoreTimestamp();</span><br><span class="line">         //如果找到了对应的MappedFile，则对该MappedFile中的内容执行刷盘操作，并更新flushedWhere</span><br><span class="line">         int offset = mappedFile.flush(flushLeastPages);</span><br><span class="line">         long where = mappedFile.getFileFromOffset() + offset;</span><br><span class="line">         result = where == this.flushedWhere;</span><br><span class="line">         this.flushedWhere = where;</span><br><span class="line">         if (0 == flushLeastPages) &#123;</span><br><span class="line">             this.storeTimestamp = tmpTimeStamp;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> </span><br><span class="line">     return result;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>刷盘的终极目的地就在MappedFile的flush()方法中：判断是否满足刷盘条件；如果满足刷盘条件，则将内存中的内容刷到文件中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public int flush(final int flushLeastPages) &#123;</span><br><span class="line">    if (this.isAbleToFlush(flushLeastPages)) &#123;</span><br><span class="line">        if (this.hold()) &#123;</span><br><span class="line">            int value = getReadPosition();</span><br><span class="line"></span><br><span class="line">            try &#123;</span><br><span class="line">                // 如果writeBuffer不为空，则表明消息是先提交到writeBuffer中，已经从writeBuffer提交到fileChannel，直接调用fileChannel.force（）  </span><br><span class="line">                // 反之，消息是直接存储在文件内存映射缓冲区mappedByteBuffer中</span><br><span class="line">                if (writeBuffer != null || this.fileChannel.position() != 0) &#123;</span><br><span class="line">                    //方式一 文件通道(fileChannel)flush</span><br><span class="line">                    this.fileChannel.force(false);</span><br><span class="line">                &#125; else &#123;                     </span><br><span class="line">                    //方式二 映射文件字节缓冲区(mappedByteBuffer)flush</span><br><span class="line">                    this.mappedByteBuffer.force();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                log.error(&quot;Error occurred when force data to disk.&quot;, e);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            this.flushedPosition.set(value);</span><br><span class="line">            this.release();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            log.warn(&quot;in flush, hold failed, flush offset = &quot; + this.flushedPosition.get());</span><br><span class="line">            this.flushedPosition.set(getReadPosition());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return this.getFlushedPosition();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>了解了RocketMQ的两种刷盘策略：</p>
+<ul>
+<li>一种是类似强一致的（SYNC 模式），保证消息存储到文件中的同步策略，立刻刷盘并同步阻塞等待刷盘结果</li>
+<li>一种是提交到内存中就算存储成功（ASYNC 模式），在后台异步进行刷盘的异步策略（通知异步线程进行刷盘，但不等待结果）</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MQ/" rel="tag"><i class="fa fa-tag"></i> MQ</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/29/RocketMQ-消息存储/" rel="next" title="RocketMQ-消息存储">
+                <i class="fa fa-chevron-left"></i> RocketMQ-消息存储
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/31/RocketMQ-消费模式/" rel="prev" title="RocketMQ-消费模式">
+                RocketMQ-消费模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#刷盘策略"><span class="nav-number">1.</span> <span class="nav-text">刷盘策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#handleDiskFlush"><span class="nav-number">2.</span> <span class="nav-text">handleDiskFlush()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#同步刷盘"><span class="nav-number">3.</span> <span class="nav-text">同步刷盘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步刷盘"><span class="nav-number">4.</span> <span class="nav-text">异步刷盘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MappedFile落盘"><span class="nav-number">5.</span> <span class="nav-text">MappedFile落盘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

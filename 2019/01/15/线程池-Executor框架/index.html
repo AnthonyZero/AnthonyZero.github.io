@@ -1,0 +1,865 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="JUC,线程池,阻塞队列," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Executor简介Executor 框架结构(主要由三大部分组成)任务：执行任务需要实现的Runnable接口或Callable接口。两者区别在于：Runnable接口不会返回结果但是Callable接口可以返回结果。 任务的执行：任务执行机制的核心接口Executor ，以及继承自Executor 接口的ExecutorService接口。ThreadPoolExecutor和Schedul">
+<meta name="keywords" content="JUC,线程池,阻塞队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="线程池:Executor框架">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/01/15/线程池-Executor框架/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="Executor简介Executor 框架结构(主要由三大部分组成)任务：执行任务需要实现的Runnable接口或Callable接口。两者区别在于：Runnable接口不会返回结果但是Callable接口可以返回结果。 任务的执行：任务执行机制的核心接口Executor ，以及继承自Executor 接口的ExecutorService接口。ThreadPoolExecutor和Schedul">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/executor1.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/executor2.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/executor3.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.629Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="线程池:Executor框架">
+<meta name="twitter:description" content="Executor简介Executor 框架结构(主要由三大部分组成)任务：执行任务需要实现的Runnable接口或Callable接口。两者区别在于：Runnable接口不会返回结果但是Callable接口可以返回结果。 任务的执行：任务执行机制的核心接口Executor ，以及继承自Executor 接口的ExecutorService接口。ThreadPoolExecutor和Schedul">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/executor1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/01/15/线程池-Executor框架/"/>
+
+
+
+
+
+  <title> 线程池:Executor框架 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/01/15/线程池-Executor框架/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                线程池:Executor框架
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-15T21:36:57+08:00">
+                2019-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/images/executor1.png" alt="Alt text"></p>
+<h3 id="Executor简介"><a href="#Executor简介" class="headerlink" title="Executor简介"></a>Executor简介</h3><p>Executor 框架结构(主要由三大部分组成)<br><strong>任务</strong>：执行任务需要实现的Runnable接口或Callable接口。两者区别在于：Runnable接口不会返回结果但是Callable接口可以返回结果。</p>
+<p><strong>任务的执行</strong>：任务执行机制的核心接口Executor ，以及继承自Executor 接口的ExecutorService接口。ThreadPoolExecutor和ScheduledThreadPoolExecutor这两个关键类实现了ExecutorService接口。</p>
+<p><strong>异步计算的结果</strong>：Future接口以及Future接口的实现类FutureTask类。当我们把Runnable接口或Callable接口的实现类提交（调用submit方法）给ThreadPoolExecutor或ScheduledThreadPoolExecutor时，会返回一个FutureTask对象。</p>
+<a id="more"></a>
+<h3 id="Executor框架的使用示意图"><a href="#Executor框架的使用示意图" class="headerlink" title="Executor框架的使用示意图"></a>Executor框架的使用示意图</h3><p><img src="/images/executor2.png" alt="Alt text"></p>
+<ol>
+<li><p>主线程首先要创建实现Runnable或者Callable接口的任务对象。工具类<font color="red">Executors</font>可以实现Runnable对象封装成一个Callable对象。（Executors.callable（Runnable task）或Executors.callable（Runnable task，Object result））。</p>
+</li>
+<li><p>然后可以把创建完成的Runnable对象直接交给ExecutorService执行：（ExecutorService.execute（Runnable command））；或者也可以把Runnable对象或Callable对象提交给ExecutorService执行（ExecutorService.submit（Runnable task）或ExecutorService.submit（Callable  task））                  </p>
+</li>
+<li><p>如果执行ExecutorService.submit（…），ExecutorService将返回一个实现Future接口的对象。</p>
+</li>
+<li><p>最后，主线程可以执行FutureTask.get()方法来等待任务执行完成。主线程也可以执行FutureTask.cancel（boolean mayInterruptIfRunning）来取消此任务的执行</p>
+</li>
+</ol>
+<blockquote>
+<p>执行execute()方法和submit()方法的区别是什么呢？<br>  1)execute()方法用于提交不需要返回值的任务，所以无法判断任务是否被线程池执行成功与否；<br>  2)submit()方法用于提交需要返回值的任务。线程池会返回一个future类型的对象，通过这个future对象可以判断任务是否执行成功，并且可以通过future的get()方法来获取返回值，get()方法会阻塞当前线程直到任务完成，而使用get（long timeout，TimeUnit unit）方法则会阻塞当前线程一段时间后立即返回，这时候有可能任务没有执行完。</p>
+</blockquote>
+<h3 id="ThreadPoolExecutor浅析"><a href="#ThreadPoolExecutor浅析" class="headerlink" title="ThreadPoolExecutor浅析"></a>ThreadPoolExecutor浅析</h3><p>ThreadPoolExecutor是线程池的真正实现，通常使用工厂类Executors来创建，它的构造方法提供了一系列参数来配置线程池。 </p>
+<pre><code>public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue&lt;Runnable&gt; workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) 
+</code></pre><p>由于ThreadPoolExecutor的参数在上一篇JAVA中的线程池详细说明过，这里不再累赘。主要介绍3种常见的线程池，它们都直接或者间接地通过配置ThreadPoolExecutor来实现自己的功能特性，这个3种线程池分别是FixedThreadPool，CachedThreadPool，以及SingleThreadExecutor。  </p>
+<h4 id="FixedThreadPool"><a href="#FixedThreadPool" class="headerlink" title="FixedThreadPool"></a>FixedThreadPool</h4><p>FixedThreadPool会使用一个优先固定数目的线程来处理若干数目的任务。规定数目的线程处理所有任务，一旦有线程处理完了任务就会被用来处理新的任务(如果有的话)。FixedThreadPool模式下最多的线程数目是一定的。   </p>
+<pre><code>public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue&lt;Runnable&gt;());
+    }
+</code></pre><p>（1）如果当前运行线程数小于corePoolSize，则创建一个新的线程来执行任务。<br>（2）如果当前线程池的运行线程数等于corePoolSize，那么后面提交的任务将加入LinkedBlockingQueue。<br>（3）线程在执行完任务之后，会在循环中反复从LinkedBlockingQueue获取任务来执行。<br>这里还有点要说明的是FixedThreadPool使用的是<strong>无界队列LinkedBlockingQueue</strong>作为线程池的工作队列（队列容量为Integer.MAX_VALUE）。使用该队列作为工作队列会对线程池产生如下影响<br>（1）当前线程池中的线程数量达到corePoolSize后，新的任务将在无界队列中等待。<br>（2）由于我们使用的是无界队列，所以参数maximumPoolSize和keepAliveTime无效。（maximumPoolSize跟核心线程数一致）<br>（3）由于使用无界队列，运行中的FixedThreadPool不会拒绝任务（当然此时是未执行shutdown和shutdownNow方法），所以不会去调用RejectExecutionHandler的rejectExecution方法抛出异常</p>
+<h4 id="SingleThreadExecutor"><a href="#SingleThreadExecutor" class="headerlink" title="SingleThreadExecutor"></a>SingleThreadExecutor</h4><p>SingleThreadExecutor模式只会创建一个线程。它和FixedThreadPool比较类似，不过线程数是一个。如果多个任务被提交给SingleThreadExecutor的话，那么这些任务会被保存在一个队列中，并且会按照任务提交的顺序，一个先执行完成再执行另外一个线程。SingleThreadExecutor模式可以保证只有一个任务会被执行。这种特点可以被用来处理共享资源的问题而不需要考虑同步的问题。</p>
+<pre><code>public static ExecutorService newSingleThreadExecutor() {
+        return new FinalizableDelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue&lt;Runnable&gt;()));
+    }
+</code></pre><p>（1）如果当前线程数少于corePoolSize即线程池中没有线程运行，则创建一个新的线程来执行任务。<br>（2）在线程池的线程数量等于corePoolSize时，将任务加入到LinkedBlockingQueue。<br>（3）线程执行完成（1）中的任务后，会在一个无限循环中反复从LinkedBlockingQueue获取任务来执行。</p>
+<h4 id="CachedThreadPool"><a href="#CachedThreadPool" class="headerlink" title="CachedThreadPool"></a>CachedThreadPool</h4><p>CachedThreadPool首先会按照需要创建足够多的线程来执行任务(Task)。随着程序执行的过程，有的线程执行完了任务，可以被重新循环使用时，才不再创建新的线程来执行任务。</p>
+<pre><code>public static ExecutorService newCachedThreadPool() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue&lt;Runnable&gt;());
+    }
+</code></pre><p>CachedThreadPool的corePoolSize被设置为0，而maximumPoolSize被设置Integer.MAX_VALUE，即maximumPoolSize是无界的，而keepAliveTime被设置为60L，单位为秒。也就是空闲线程等待时间最长为60秒，超过该时间将会被终止。而且在这里CachedThreadPool使用的是没有容量的SynchronousQueue作为线程池的工作队列，但其maximumPoolSize是无界的，也就是<strong>意味着如果主线程提交任务的速度高于线程池中线程处理任务的速度时CachedThreadPool将会不断的创建新的线程，在极端情况下，CachedThreadPool会因为创建过多线程而耗尽CPU和内存资源</strong><br>（1）首先执行SynchronousQueue.offer(Runnable task)，添加一个任务。如果当前CachedThreadPool中有空闲线程正在执行队列poll操作,那么主线程执行offer操作与空闲线程执行poll操作配对成功，主线程把任务交给空闲线程执行，execute()方法执行完成，否则进入第（2）步。<br>（2）当CachedThreadPool初始线程数为空时，或者当前没有空闲线程，将没有线程去执行SynchronousQueue.poll()。这样的情况下，步骤（1）将会失败，此时CachedThreadPool会创建一个新的线程来执行任务，execute()方法执行完成。<br>（3）在步骤（2）中创建的新线程将任务执行完成后，会执行SynchronousQueue.poll()，这个poll操作会让空闲线程最多在SynchronousQueue中等待60秒，如果60秒内主线程提交了一个新任务，那么这个空闲线程将会执行主线程提交的新任务，否则，这个空闲线程将被终止。<strong>由于空闲60秒的空闲线程会被终止，因此长时间保持空闲的CachedThreadPool是不会使用任何资源的。</strong></p>
+<blockquote>
+<p>线程池中的线程数量可增可减，但是要特别注意提交任务速度一直大于线程消费任务速度会造成OOM</p>
+</blockquote>
+<h3 id="ScheduledThreadPoolExecutor浅析"><a href="#ScheduledThreadPoolExecutor浅析" class="headerlink" title="ScheduledThreadPoolExecutor浅析"></a>ScheduledThreadPoolExecutor浅析</h3><p>ScheduledThreadPoolExecutor继承自ThreadPoolExecutor。它主要用来在给定的延迟之后执行任务，或者定期执行任务。ScheduledThreadPoolExecutor的功能与Timer类似，但比Timer更强大，更灵活，Timer对应的是单个后台线程，而ScheduledThreadPoolExecutor可以在构造函数中指定多个对应的后台线程数<br><img src="/images/executor3.png" alt="Alt text"></p>
+<pre><code>public ScheduledThreadPoolExecutor(int corePoolSize,
+                                       ThreadFactory threadFactory,
+                                       RejectedExecutionHandler handler) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+              new DelayedWorkQueue(), threadFactory, handler);
+    }
+</code></pre><p>ScheduledThreadPoolExecutor的执行主要分为两大部分：</p>
+<ol>
+<li><p>当调用ScheduledThreadPoolExecutor的 scheduleAtFixedRate() 方法或者scheduleWirhFixedDelay() 方法时，会向ScheduledThreadPoolExecutor的 DelayQueue 添加一个实现了 RunnableScheduledFutur 接口的 ScheduledFutureTask</p>
+</li>
+<li><p>线程池中的线程从DelayQueue中获取ScheduledFutureTask，然后执行任务。</p>
+</li>
+</ol>
+<p>为了实现周期性的执行任务，对ThreadPoolExecutor做了如下修改：</p>
+<ul>
+<li>使用 DelayQueue 作为任务队列；</li>
+<li>获取任务的方不同</li>
+<li>执行周期任务后，增加了额外的处理</li>
+</ul>
+<p>ScheduledThreadPoolExecutor执行周期任务的步骤</p>
+<ol>
+<li>线程1从DelayQueue中获取已到期的ScheduledFutureTask（DelayQueue.take()）。到期任务是指ScheduledFutureTask的time大于等于当前系统的时间；</li>
+<li>线程1执行这个ScheduledFutureTask；</li>
+<li>线程1修改ScheduledFutureTask的time变量为下次将要被执行的时间；</li>
+<li>线程1把这个修改time之后的ScheduledFutureTask放回DelayQueue中（DelayQueue.add())。</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>各自的适用场景：<br><strong>FixedThreadPool</strong>：适用于为了满足资源管理需求，而需要限制当前线程的数量的应用场景，它适用于负载比较重的服务器。<br><strong>SingleThreadExecutor</strong>：适用于需要保证执行顺序地执行各个任务；并且在任意时间点，不会有多个线程是活动的场景。<br><strong>CachedThreadPool</strong>：大小无界的线程池，适用于执行很多的短期异步任务的小程序，或者负载较轻的服务器。<br><strong>ScheduledThreadPoolExecutor</strong>：适用于需要多个后台执行周期任务，同时为了满足资源管理需求而需要限制后台线程的数量的应用场景，<br><strong>SingleThreadScheduledExecutor</strong>：适用于需要单个后台线程执行周期任务，同时保证顺序地执行各个任务的应用场景。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JUC/" rel="tag"><i class="fa fa-tag"></i> JUC</a>
+          
+            <a href="/tags/线程池/" rel="tag"><i class="fa fa-tag"></i> 线程池</a>
+          
+            <a href="/tags/阻塞队列/" rel="tag"><i class="fa fa-tag"></i> 阻塞队列</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/06/JAVA中的线程池/" rel="next" title="JAVA中的线程池">
+                <i class="fa fa-chevron-left"></i> JAVA中的线程池
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/12/理解使用python装饰器/" rel="prev" title="理解使用python装饰器">
+                理解使用python装饰器 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Executor简介"><span class="nav-number">1.</span> <span class="nav-text">Executor简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Executor框架的使用示意图"><span class="nav-number">2.</span> <span class="nav-text">Executor框架的使用示意图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ThreadPoolExecutor浅析"><span class="nav-number">3.</span> <span class="nav-text">ThreadPoolExecutor浅析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#FixedThreadPool"><span class="nav-number">3.1.</span> <span class="nav-text">FixedThreadPool</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SingleThreadExecutor"><span class="nav-number">3.2.</span> <span class="nav-text">SingleThreadExecutor</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CachedThreadPool"><span class="nav-number">3.3.</span> <span class="nav-text">CachedThreadPool</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ScheduledThreadPoolExecutor浅析"><span class="nav-number">4.</span> <span class="nav-text">ScheduledThreadPoolExecutor浅析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

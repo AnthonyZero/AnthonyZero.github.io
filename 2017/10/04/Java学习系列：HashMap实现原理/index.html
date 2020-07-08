@@ -1,0 +1,868 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="hashcode,HashMap,链表," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="HashMap概述HashMap是基于哈希表的Map接口的非同步实现。此实现提供所有可选的映射操作，并允许使用null值和null键。此类不保证映射的顺序，特别是它不保证该顺序恒久不变 HashMap的数据结构在java编程语言中，最基本的结构就是两种，一个是数组，另外一个是模拟指针（引用），所有的数据结构都可以用这两个基本结构来构造的，HashMap也不例外。HashMap实际上是一个“链表散列">
+<meta name="keywords" content="hashcode,HashMap,链表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java学习系列：HashMap实现原理">
+<meta property="og:url" content="https://anthonyzero.github.io/2017/10/04/Java学习系列：HashMap实现原理/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="HashMap概述HashMap是基于哈希表的Map接口的非同步实现。此实现提供所有可选的映射操作，并允许使用null值和null键。此类不保证映射的顺序，特别是它不保证该顺序恒久不变 HashMap的数据结构在java编程语言中，最基本的结构就是两种，一个是数组，另外一个是模拟指针（引用），所有的数据结构都可以用这两个基本结构来构造的，HashMap也不例外。HashMap实际上是一个“链表散列">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/hashmap.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.367Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java学习系列：HashMap实现原理">
+<meta name="twitter:description" content="HashMap概述HashMap是基于哈希表的Map接口的非同步实现。此实现提供所有可选的映射操作，并允许使用null值和null键。此类不保证映射的顺序，特别是它不保证该顺序恒久不变 HashMap的数据结构在java编程语言中，最基本的结构就是两种，一个是数组，另外一个是模拟指针（引用），所有的数据结构都可以用这两个基本结构来构造的，HashMap也不例外。HashMap实际上是一个“链表散列">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/hashmap.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2017/10/04/Java学习系列：HashMap实现原理/"/>
+
+
+
+
+
+  <title> Java学习系列：HashMap实现原理 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2017/10/04/Java学习系列：HashMap实现原理/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Java学习系列：HashMap实现原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-04T22:30:54+08:00">
+                2017-10-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="HashMap概述"><a href="#HashMap概述" class="headerlink" title="HashMap概述"></a>HashMap概述</h3><p>HashMap是基于哈希表的Map接口的非同步实现。此实现提供所有可选的映射操作，并允许使用null值和null键。此类不保证映射的顺序，特别是它不保证该顺序恒久不变</p>
+<h3 id="HashMap的数据结构"><a href="#HashMap的数据结构" class="headerlink" title="HashMap的数据结构"></a>HashMap的数据结构</h3><p>在java编程语言中，最基本的结构就是两种，一个是数组，另外一个是模拟指针（引用），所有的数据结构都可以用这两个基本结构来构造的，HashMap也不例外。HashMap实际上是一个“链表散列”的数据结构，即数组和链表的结合体（<strong>以数组存储元素，如有hash相同的元素，在数组结构中，创建链表结构，再把hash相同的元素放到链表的下一个节点</strong>）</p>
+<a id="more"></a>
+<p><img src="/images/hashmap.png" alt="Alt text"></p>
+<pre><code>transient Entry[] table;  
+
+static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {  
+    final K key;  
+    V value;  
+    Entry&lt;K,V&gt; next;  
+    final int hash;  
+    ……  
+}
+</code></pre><p>可以看出，Entry就是数组中的元素，每个 Map.Entry 其实就是一个key-value对，它持有一个指向下一个元素的引用，这就构成了链表</p>
+<blockquote>
+<p>数组是HashMap的主体，链表则是主要为了解决哈希冲突而存在的。<br>如果定位到的数组位置不含链表（当前entry的next指向null）,那么对于查找，添加等操作很快，仅需一次寻址即可。<br>如果定位到的数组包含链表，对于添加操作，其时间复杂度依然为O(1)，因为最新的Entry会插入链表头部，急需要简单改变引用链即可，而对于查找操作来讲，此时就需要遍历链表，然后通过<em>key对象的equals方法</em>逐一比对查找。所以，性能考虑，HashMap中的链表出现越少，性能才会越好</p>
+</blockquote>
+<h3 id="HashMap的put实现"><a href="#HashMap的put实现" class="headerlink" title="HashMap的put实现"></a>HashMap的put实现</h3><pre><code>public V put(K key, V value) {  
+    // HashMap允许存放null键和null值。  
+    // 当key为null时，调用putForNullKey方法，将value放置在数组第一个位置。  
+    if (key == null)  
+        return putForNullKey(value);  
+    // 根据key的keyCode重新计算hash值。  
+    int hash = hash(key.hashCode());  
+    // 搜索指定hash值在对应table中的索引。  
+    int i = indexFor(hash, table.length);  
+    // 如果 i 索引处的 Entry 不为 null，通过循环不断遍历 e 元素的下一个元素。  
+    for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {  
+        Object k;  
+        if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) {  
+            V oldValue = e.value;  
+            e.value = value;  
+            e.recordAccess(this);  
+            return oldValue;  
+        }  
+    }  
+    // 如果i索引处的Entry为null，表明此处还没有Entry。  
+    modCount++;  
+    // 将key、value添加到i索引处。  
+    addEntry(hash, key, value, i);  
+    return null;  
+}
+</code></pre><p>从上面的源代码中可以看出：当我们往HashMap中put元素的时候，先根据key的hashCode重新计算hash值，根据hash值得到这个元素在数组中的位置（即下标），如果数组该位置上已经存放有其他元素了，那么在这个位置上的元素将以链表的形式存放，新加入的放在链头，最先加入的放在链尾。如果数组该位置上没有元素，就直接将该元素放到此数组中的该位置上</p>
+<blockquote>
+<p>当系统决定存储HashMap中的key-value对时，完全没有考虑Entry中的value，仅仅只是根据key来计算并决定每个Entry的存储位置。我们完全可以把 Map 集合中的 value 当成 key 的附属，当系统决定了 key 的存储位置之后，value 随之保存在那里即可<br>HashMap是如何解决hash冲突的问题，核心就是使用了数组的存储方式，然后将冲突的key的对象放入链表中，一旦发现冲突就在链表中做进一步的对比。</p>
+</blockquote>
+<h3 id="HashMap的get实现"><a href="#HashMap的get实现" class="headerlink" title="HashMap的get实现"></a>HashMap的get实现</h3><pre><code>public V get(Object key) {  
+    if (key == null)  
+        return getForNullKey();  
+    int hash = hash(key.hashCode());  
+    for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];  
+        e != null;  
+        e = e.next) {  
+        Object k;  
+        if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k)))  
+            return e.value;  
+    }  
+    return null;  
+}  
+</code></pre><p>从上面的源代码中可以看出：从HashMap中get元素时，首先计算key的hashCode，找到数组中对应位置的某一元素，然后通过key的equals方法在对应位置的链表中找到需要的元素</p>
+<blockquote>
+<p> 归纳起来简单地说，HashMap 在底层将 key-value 当成一个整体进行处理，这个整体就是一个 Entry 对象。HashMap 底层采用一个 Entry[] 数组来保存所有的 key-value 对，当需要存储一个 Entry 对象时，会根据hash算法来决定其在数组中的存储位置，在根据equals方法决定其在该数组位置上的链表中的存储位置；当需要取出一个Entry时，也会根据hash算法找到其在数组中的存储位置，再根据equals方法从该位置上的链表中取出该Entry</p>
+</blockquote>
+<h3 id="HashMap的扩容机制"><a href="#HashMap的扩容机制" class="headerlink" title="HashMap的扩容机制"></a>HashMap的扩容机制</h3><p>当HashMap中的元素越来越多的时候，hash冲突的几率也就越来越高，因为数组的长度是固定的。所以为了提高查询的效率，就要对HashMap的数组进行扩容，数组扩容这个操作也会出现在ArrayList中，这是一个常用的操作，而在HashMap数组扩容之后，最消耗性能的点就出现了：原数组中的数据必须重新计算其在新数组中的位置，并放进去，这就是resize。</p>
+<p>HashMap的两个重要属性是容量capacity和装载因子loadfactor，默认值分别为16和0.75，当容器中的元素个数大于 capacity*loadfactor = 12时，容器会进行扩容resize 为2n，在初始化Hashmap时可以对着两个值进行修改，负载因子0.75被证明为是性能比较好的取值，通常不会修改，那么只有初始容量capacity会导致频繁的扩容行为，这是非常耗费资源的操作，所以，如果事先能估算出容器所要存储的元素数量，最好在初始化时修改默认容量capacity，以防止频繁的resize操作影响性能<br>Java8对hashmap做了优化 ，底层有两种实现方法，一种是数组和链表，一种是数组和红黑树，hashmap会根据数据量选择存储结构<br>if (binCount &gt;= TREEIFY_THRESHOLD - 1)<br>当符合这个条件的时候，把链表变成treemap，这样查找效率从o(n)变成了o(log n)</p>
+<h3 id="Fail-Fast机制"><a href="#Fail-Fast机制" class="headerlink" title="Fail-Fast机制"></a>Fail-Fast机制</h3><p>我们知道java.util.HashMap不是线程安全的，因此如果在使用迭代器的过程中有其他线程修改了map，那么将抛出ConcurrentModificationException，这就是所谓fail-fast策略<br>这一策略在源码中的实现是通过modCount域，modCount顾名思义就是修改次数，对HashMap内容的修改都将增加这个值，那么在迭代器初始化过程中会将这个值赋给迭代器的expectedModCount</p>
+<pre><code>HashIterator() {
+    expectedModCount = modCount;
+    if (size &gt; 0) { // advance to first entry
+        HashMapEntry[] t = table;
+        while (index &lt; t.length &amp;&amp; (next = t[index++]) == null)
+            ;
+    }
+}
+</code></pre><p>在迭代过程中，判断modCount跟expectedModCount是否相等，如果不相等就表示已经有其他线程修改了Map<br>注意到modCount声明为volatile，保证线程之间修改的可见性。(volatile之所以线程安全是因为被volatile修饰的变量不保存缓存，直接在内存中修改，因此能够保证线程之间修改的可见性)</p>
+<h4 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h4><ul>
+<li>使用线程安全的ConcurrentHashMap或HashTable,它就不会产生ConcurrentModificationException异常，也就是它使用迭代器完全不会产生fail-fast机制</li>
+<li>Collections.synchronizedMap将HashMap包装起来</li>
+</ul>
+<h3 id="附"><a href="#附" class="headerlink" title="附"></a>附</h3><h4 id="什么是HashMap？你为什么用到它"><a href="#什么是HashMap？你为什么用到它" class="headerlink" title="什么是HashMap？你为什么用到它"></a>什么是HashMap？你为什么用到它</h4><p>HashMap可以接受null键值和值，而Hashtable则不能；HashMap是非synchronized;HashMap很快；以及HashMap储存的是键值对等等</p>
+<h4 id="HashMap的工作原理-HashMap的get-方法的工作原理"><a href="#HashMap的工作原理-HashMap的get-方法的工作原理" class="headerlink" title="HashMap的工作原理 HashMap的get()方法的工作原理"></a>HashMap的工作原理 HashMap的get()方法的工作原理</h4><p>HashMap是基于hashing的原理，我们使用put(key, value)存储对象到HashMap中，使用get(key)从HashMap中获取对象。当我们给put()方法传递键和值时，我们先对键调用hashCode()方法，返回的hashCode用于找到bucket位置来储存Entry对象…”这里关键点在于指出，HashMap是在bucket中储存键对象和值对象，作为Map.Entry</p>
+<h4 id="当两个对象的hashcode相同会发生什么"><a href="#当两个对象的hashcode相同会发生什么" class="headerlink" title="当两个对象的hashcode相同会发生什么"></a>当两个对象的hashcode相同会发生什么</h4><p>因为hashcode相同，所以它们的bucket位置相同，‘碰撞’会发生。因为HashMap使用链表存储对象，这个Entry(包含有键值对的Map.Entry对象)会存储此位置中的链表中（同一位置上的链表的每个Map.Entry元素的键的hashcode是相同的）</p>
+<h4 id="如果两个键的hashcode相同，你如何获取值对象"><a href="#如果两个键的hashcode相同，你如何获取值对象" class="headerlink" title="如果两个键的hashcode相同，你如何获取值对象"></a>如果两个键的hashcode相同，你如何获取值对象</h4><p>hashcode找到bucket位置之后，会调用keys.equals()方法去找到链表中正确的节点，最终找到要找的值对象</p>
+<h4 id="如果HashMap的大小超过了负载因子-load-factor-定义的容量，怎么办"><a href="#如果HashMap的大小超过了负载因子-load-factor-定义的容量，怎么办" class="headerlink" title="如果HashMap的大小超过了负载因子(load factor)定义的容量，怎么办"></a>如果HashMap的大小超过了负载因子(load factor)定义的容量，怎么办</h4><p>默认的负载因子大小为0.75，也就是说，当一个map填满了75%的bucket时候，和其它集合类(如ArrayList等)一样，将会创建原来HashMap大小的两倍的bucket数组，来重新调整map的大小，并将原来的对象放入新的bucket数组中。这个过程叫作rehashing，因为它调用hash方法找到新的bucket位置</p>
+<h4 id="你了解重新调整HashMap大小存在什么问题吗"><a href="#你了解重新调整HashMap大小存在什么问题吗" class="headerlink" title="你了解重新调整HashMap大小存在什么问题吗"></a>你了解重新调整HashMap大小存在什么问题吗</h4><p>当重新调整HashMap大小的时候，确实存在条件竞争，因为如果两个线程都发现HashMap需要重新调整大小了，它们会同时试着调整大小。在调整大小的过程中，存储在链表中的元素的次序会反过来，因为移动到新的bucket位置的时候，HashMap并不会将元素放在链表的尾部，而是放在头部，这是为了避免尾部遍历(tail traversing)。如果条件竞争发生了，那么就死循环了。所以不要在多线程的环境下使用HashMap，因为他是线程不安全的</p>
+<h4 id="为什么String-Interger这样的wrapper类适合作为键"><a href="#为什么String-Interger这样的wrapper类适合作为键" class="headerlink" title="为什么String, Interger这样的wrapper类适合作为键"></a>为什么String, Interger这样的wrapper类适合作为键</h4><p>String, Interger这样的wrapper类作为HashMap的键是再适合不过了，而且String最为常用。因为String是不可变的，也是final的，而且已经重写了equals()和hashCode()方法了。其他的wrapper类也有这个特点。不可变性是必要的，因为为了要计算hashCode()，就要防止键值改变，如果键值在放入时和获取时返回不同的hashcode的话，那么就不能从HashMap中找到你想要的对象。不可变性还有其他的优点如线程安全。如果你可以仅仅通过将某个field声明成final就能保证hashCode是不变的，那么请这么做吧。因为获取对象的时候要用到equals()和hashCode()方法，那么键对象正确的重写这两个方法是非常重要的。如果两个不相等的对象返回不同的hashcode的话，那么碰撞的几率就会小些，这样就能提高HashMap的性能。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hashcode/" rel="tag"><i class="fa fa-tag"></i> hashcode</a>
+          
+            <a href="/tags/HashMap/" rel="tag"><i class="fa fa-tag"></i> HashMap</a>
+          
+            <a href="/tags/链表/" rel="tag"><i class="fa fa-tag"></i> 链表</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/28/MySQL递归遍历树/" rel="next" title="MySQL递归遍历树">
+                <i class="fa fa-chevron-left"></i> MySQL递归遍历树
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/08/Java学习系列：ArrayList实现原理/" rel="prev" title="Java学习系列：ArrayList实现原理">
+                Java学习系列：ArrayList实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap概述"><span class="nav-number">1.</span> <span class="nav-text">HashMap概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap的数据结构"><span class="nav-number">2.</span> <span class="nav-text">HashMap的数据结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap的put实现"><span class="nav-number">3.</span> <span class="nav-text">HashMap的put实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap的get实现"><span class="nav-number">4.</span> <span class="nav-text">HashMap的get实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap的扩容机制"><span class="nav-number">5.</span> <span class="nav-text">HashMap的扩容机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fail-Fast机制"><span class="nav-number">6.</span> <span class="nav-text">Fail-Fast机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#解决办法"><span class="nav-number">6.1.</span> <span class="nav-text">解决办法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#附"><span class="nav-number">7.</span> <span class="nav-text">附</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是HashMap？你为什么用到它"><span class="nav-number">7.1.</span> <span class="nav-text">什么是HashMap？你为什么用到它</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HashMap的工作原理-HashMap的get-方法的工作原理"><span class="nav-number">7.2.</span> <span class="nav-text">HashMap的工作原理 HashMap的get()方法的工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#当两个对象的hashcode相同会发生什么"><span class="nav-number">7.3.</span> <span class="nav-text">当两个对象的hashcode相同会发生什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如果两个键的hashcode相同，你如何获取值对象"><span class="nav-number">7.4.</span> <span class="nav-text">如果两个键的hashcode相同，你如何获取值对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如果HashMap的大小超过了负载因子-load-factor-定义的容量，怎么办"><span class="nav-number">7.5.</span> <span class="nav-text">如果HashMap的大小超过了负载因子(load factor)定义的容量，怎么办</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#你了解重新调整HashMap大小存在什么问题吗"><span class="nav-number">7.6.</span> <span class="nav-text">你了解重新调整HashMap大小存在什么问题吗</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#为什么String-Interger这样的wrapper类适合作为键"><span class="nav-number">7.7.</span> <span class="nav-text">为什么String, Interger这样的wrapper类适合作为键</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

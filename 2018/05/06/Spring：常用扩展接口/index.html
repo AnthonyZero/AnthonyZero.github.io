@@ -1,0 +1,877 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="BeanFactory," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言Spring是一款非常强大的框架，可以说是几乎所有的企业级Java项目使用了Spring，而Bean又是Spring框架的核心。Spring框架运用了非常多的设计模式，从整体上看，它的设计严格遵循了OCP—-开闭原则，即： 1、保证对修改关闭，即外部无法修改Spring整个运作的流程2、提供对扩展开放，即可以通过继承、实现Spring提供的众多抽象类与接口来改变类加载的行为">
+<meta name="keywords" content="BeanFactory">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring：常用扩展接口">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/05/06/Spring：常用扩展接口/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="前言Spring是一款非常强大的框架，可以说是几乎所有的企业级Java项目使用了Spring，而Bean又是Spring框架的核心。Spring框架运用了非常多的设计模式，从整体上看，它的设计严格遵循了OCP—-开闭原则，即： 1、保证对修改关闭，即外部无法修改Spring整个运作的流程2、提供对扩展开放，即可以通过继承、实现Spring提供的众多抽象类与接口来改变类加载的行为">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/ioc4.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.551Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring：常用扩展接口">
+<meta name="twitter:description" content="前言Spring是一款非常强大的框架，可以说是几乎所有的企业级Java项目使用了Spring，而Bean又是Spring框架的核心。Spring框架运用了非常多的设计模式，从整体上看，它的设计严格遵循了OCP—-开闭原则，即： 1、保证对修改关闭，即外部无法修改Spring整个运作的流程2、提供对扩展开放，即可以通过继承、实现Spring提供的众多抽象类与接口来改变类加载的行为">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/ioc4.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/05/06/Spring：常用扩展接口/"/>
+
+
+
+
+
+  <title> Spring：常用扩展接口 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/05/06/Spring：常用扩展接口/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring：常用扩展接口
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-06T00:01:43+08:00">
+                2018-05-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>Spring是一款非常强大的框架，可以说是几乎所有的企业级Java项目使用了Spring，而Bean又是Spring框架的核心。Spring框架运用了非常多的设计模式，从整体上看，它的设计严格遵循了OCP—-开闭原则，即：</p>
+<p>1、保证对修改关闭，即外部无法修改Spring整个运作的流程<br>2、提供对扩展开放，即可以通过继承、实现Spring提供的众多抽象类与接口来改变类加载的行为</p>
+<a id="more"></a>
+<h3 id="Spring中的核心类"><a href="#Spring中的核心类" class="headerlink" title="Spring中的核心类"></a>Spring中的核心类</h3><ul>
+<li>BeanFactory：产生一个新的实例，可以实现单例模式</li>
+<li>BeanWrapper：提供统一的get及set方法</li>
+<li>ApplicationContext:提供框架的实现，包括BeanFactory的所有功能</li>
+</ul>
+<h3 id="Spring常用的类和接口"><a href="#Spring常用的类和接口" class="headerlink" title="Spring常用的类和接口"></a>Spring常用的类和接口</h3><p>A：ApplicationContextAware接口<br>当一个类需要获取ApplicationContext实例时，可以让该类实现ApplicationContextAware接口。<br>B：ApplicationEvent抽象类<br>当需要创建自定义事件时，可以新建一个继承自ApplicationEvent抽象类的类。<br>C：ApplicationListener接口<br>当需要监听自定义事件时，可以新建一个实现ApplicationListener接口的类，并将该类配置到Spring容器中。<br>D：BeanNameAware接口<br>当bean需要获取自身在容器中的id/name时，可以实现BeanNameAware接口。<br>E：InitializingBean接口<br>当<strong>需要在bean的全部属性设置成功后</strong>做些特殊的处理，可以让该bean实现InitializingBean接口。<br>效果等同于bean的init-method属性的使用或者@PostContsuct注解的使用。<br>三种方式的执行顺序：先注解，然后执行InitializingBean接口中定义的方法，最后执行init-method属性指定的方法。<br>F：DisposableBean接口<br>当需要在bean销毁之前做些特殊的处理，可以让该bean实现DisposableBean接口。<br>效果等同于bean的destroy-method属性的使用或者@PreDestory注解的使用。<br>三种方式的执行顺序：先注解，然后执行DisposableBean接口中定义的方法，最后执行destroy-method属性指定的方法。<br>G：BeanPostProcessor接口<br>当需要对受管bean进行预处理时，可以新建一个实现BeanPostProcessor接口的类，并将该类配置到Spring容器中。<br>H：BeanFactoryPostProcessor接口<br>当需要对Bean工厂进行预处理时，可以新建一个实现BeanFactoryPostProcessor接口的类，并将该类配置到Spring容器中。</p>
+<h3 id="InitialingBean和DisposableBean"><a href="#InitialingBean和DisposableBean" class="headerlink" title="InitialingBean和DisposableBean"></a>InitialingBean和DisposableBean</h3><p>这两个接口是一组的，功能类似，因此放在一起：前者顾名思义在Bean属性都设置完毕后调用afterPropertiesSet()方法做一些初始化的工作，后者在Bean生命周期结束前调用destory()方法做一些收尾工作,afterPropertiesSet()方法就如同它的名字所表示的那样，是在Bean的属性都被设置完毕之后，才会调用<br>1、InitializingBean接口、Disposable接口可以和init-method、destory-method配合使用，接口执行顺序优先于配置<br>2、InitializingBean接口、Disposable接口底层使用类型强转.方法名()进行直接方法调用，init-method、destory-method底层使用反射，前者和Spring耦合程度更高但效率高，后者解除了和Spring之间的耦合但是效率低，使用哪个看个人喜好<br>3、afterPropertiesSet()方法是在Bean的属性设置之后才会进行调用，某个Bean的afterPropertiesSet()方法执行完毕才会执行下一个Bean的afterPropertiesSet()方法，因此不建议在afterPropertiesSet()方法中写处理时间太长的方法</p>
+<h3 id="Bean的生命周期"><a href="#Bean的生命周期" class="headerlink" title="Bean的生命周期"></a>Bean的生命周期</h3><p><img src="/images/ioc4.png" alt="Alt text"></p>
+<ul>
+<li>Spring容器 从XML 文件中读取bean的定义，并实例化bean。</li>
+<li>Spring根据bean的定义填充所有的属性。</li>
+<li>如果bean实现了BeanNameAware 接口，Spring 传递bean 的ID 到 setBeanName方法。</li>
+<li>如果Bean 实现了 BeanFactoryAware 接口， Spring传递beanfactory 给setBeanFactory 方法。</li>
+<li>如果有任何与bean相关联的BeanPostProcessors,Spring会在postProcesserBeforeInitialization()方法内调用它们.</li>
+<li>如果bean实现IntializingBean了，调用它的afterPropertySet方法，如果bean声明了初始化方法，调用此初始化方法。</li>
+<li>如果有BeanPostProcessors 和bean 关联，这些bean的postProcessAfterInitialization() 方法将被调用。</li>
+<li>如果bean实现了 DisposableBean，它将调用destroy()方法.</li>
+</ul>
+<blockquote>
+<p>The bean 标签有两个重要的属性（init-method和destroy-method）。用它们你可以自己定制初始化和注销方法。它们也有相应的注解（@PostConstruct和@PreDestroy）。</p>
+</blockquote>
+<h3 id="BeanNameAware、ApplicationContextAware和BeanFactoryAware"><a href="#BeanNameAware、ApplicationContextAware和BeanFactoryAware" class="headerlink" title="BeanNameAware、ApplicationContextAware和BeanFactoryAware"></a>BeanNameAware、ApplicationContextAware和BeanFactoryAware</h3><pre><code>@Component
+public class AwareBean implements BeanNameAware,  BeanFactoryAware, ApplicationContextAware{
+    private String                     beanName;
+    private ApplicationContext        applicationContext;
+    private BeanFactory                beanFactory;
+    public void setBeanName(String beanName){
+        System.out.println(&quot;Enter  AwareBean.setBeanName(), beanName = &quot; + beanName + &quot;\n&quot;);
+        this.beanName = beanName;
+    }
+    public void setApplicationContext(ApplicationContext  applicationContext) throws BeansException{
+        System.out.println(&quot;Enter  AwareBean.setApplicationContext(), applicationContext = &quot;  + applicationContext + &quot;\n&quot;);
+        this.applicationContext = applicationContext;
+    }
+    public void setBeanFactory(BeanFactory beanFactory)  throws BeansException {
+        System.out.println(&quot;Enter  AwareBean.setBeanFactory(), beanfactory = &quot; + beanFactory  + &quot;\n&quot;);
+        this.beanFactory = beanFactory;
+    }
+}
+</code></pre><p>如果你的BeanName、ApplicationContext、BeanFactory有用，那么就自己定义一个变量将它们保存下来，如果没用，那么只需要实现setXXX()方法，用一下Spring注入进来的参数即可</p>
+<h3 id="FactoryBean"><a href="#FactoryBean" class="headerlink" title="FactoryBean"></a>FactoryBean</h3><p>传统的Spring容器加载一个Bean的整个过程，都是由Spring控制的，换句话说，开发者除了设置Bean相关属性之外，是没有太多的自主权的。FactoryBean改变了这一点，开发者可以个性化地定制自己想要实例化出来的Bean，方法就是实现FactoryBean接口。</p>
+<p>1、getObject()方法是最重要的，控制Bean的实例化过程<br>2、getObjectType()方法获取接口返回的实例的class<br>3、isSingleton()方法获取该Bean是否为一个单例的Bean</p>
+<h3 id="BeanPostProcessor"><a href="#BeanPostProcessor" class="headerlink" title="BeanPostProcessor"></a>BeanPostProcessor</h3><p><strong>针对每一个Bean的生成前后做一些逻辑操作</strong>，PostProcessor则帮助我们做到了这一点<br>BeanPostProcess接口有两个方法，都可以见名知意：<br>1、postProcessBeforeInitialization：在初始化Bean之前<br>2、postProcessAfterInitialization：在初始化Bean之后<br>值得注意的是，这两个方法是有返回值的，不要返回null，否则getBean的时候拿不到对象</p>
+<pre><code>@Component
+public class PostProcessorBean implements BeanPostProcessor
+{
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
+    {
+        System.out.println(&quot;Enter ProcessorBean.postProcessAfterInitialization()\n&quot;);
+        return bean;
+    }
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
+    {
+        System.out.println(&quot;Enter ProcessorBean.postProcessBeforeInitialization()&quot;);
+        return bean;
+    }
+}
+</code></pre><blockquote>
+<p>每一个Bean在初始前后 Spring都会调用BeanPostProcessor接口的两个方法。(容器级生命周期接口方法)</p>
+</blockquote>
+<h3 id="BeanFactoryPostProcessor"><a href="#BeanFactoryPostProcessor" class="headerlink" title="BeanFactoryPostProcessor"></a>BeanFactoryPostProcessor</h3><p>Spring允许在Bean创建之前，读取Bean的元属性，并根据自己的需求对元属性进行改变，比如将Bean的scope从singleton改变为prototype，最典型的应用应当是PropertyPlaceholderConfigurer，替换xml文件中的占位符，替换为properties文件中相应的key对应的value</p>
+<p>BeanFactoryPostProcessor就可以帮助我们实现上述的功能，下面来看一下BeanFactoryPostProcessor的使用，定义一个BeanFactoryPostProcessor的实现类：</p>
+<pre><code>@Component
+public class FactoryPostProcessorBean implements BeanFactoryPostProcessor
+{
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurablelistablebeanfactory)
+            throws BeansException
+    {
+        System.out.println(&quot;Enter FactoryPostProcessorBean.postProcessBeanFactory()\n&quot;);
+    }
+}
+
+运行一下Spring容器，结果为：
+Enter FactoryPostProcessorBean.postProcessBeanFactory()
+....................................
+....................................
+....................................
+</code></pre><p>1、BeanFactoryPostProcessor的执行优先级高于BeanPostProcessor<br>2、BeanFactoryPostProcessor的postProcessBeanFactory()方法只会执行一次<br>注意到postProcessBeanFactory方法是带了参ConfigurableListableBeanFactor的，这就和我之前说的可以使用BeanFactoryPostProcessor来改变Bean的属性相对应起来了。ConfigurableListableBeanFactory功能非常丰富，最基本的，它携带了每个Bean的基本信息，比如我简单写一段代码：</p>
+<pre><code>public void postProcessBeanFactory(ConfigurableListableBeanFactory     configurablelistablebeanfactory) throws BeansException
+{
+    BeanDefinition beanDefinition = configurablelistablebeanfactory.getBeanDefinition(&quot;xxx&quot;);
+    MutablePropertyValues beanProperty = beanDefinition.getPropertyValues();
+    System.out.println(&quot;scope before change：&quot; + beanDefinition.getScope());
+    beanDefinition.setScope(&quot;singleton&quot;);
+    System.out.println(&quot;scope after change：&quot; + beanDefinition.getScope());
+    System.out.println(&quot;beanProperty：&quot; + beanProperty);
+}
+这样就获取了xxx这个Bean的生命周期以及重新设置了Bean的生命周期
+</code></pre><h3 id="InstantiationAwareBeanPostProcessor"><a href="#InstantiationAwareBeanPostProcessor" class="headerlink" title="InstantiationAwareBeanPostProcessor"></a>InstantiationAwareBeanPostProcessor</h3><p>在Bean实例化前后做一些操作: InstantiationAwareBeanPostProcessor继承自BeanPostProcess接口</p>
+<p> InstantiationAwareBeanPostProcessor 里有3 个方法，分别是 postProcessBeforeInstantiation （实例化之前），postProcessAfterInstantiation （实例化之后），postProcessPropertyValues （在处理Bean属性之前），开发者可以在这三个方法中添加自定义逻辑</p>
+<p>1、Bean构造出来之前调用postProcessBeforeInstantiation()方法</p>
+<p>2、Bean构造出来之后调用postProcessAfterInstantiation()方法</p>
+<p>不过通常来讲，我们不会直接实现InstantiationAwareBeanPostProcessor接口，而是会采用继承InstantiationAwareBeanPostProcessorAdapter这个抽象类的方式来使用</p>
+<blockquote>
+<p>实例化—-实例化的过程是一个创建Bean的过程，即调用Bean的构造函数，单例的Bean放入单例池中<br>  初始化—-初始化的过程是一个赋值的过程，即调用Bean的setter，设置Bean的属性</p>
+</blockquote>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/BeanFactory/" rel="tag"><i class="fa fa-tag"></i> BeanFactory</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/03/Spring-IOC原理总结/" rel="next" title="Spring：IOC原理总结">
+                <i class="fa fa-chevron-left"></i> Spring：IOC原理总结
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/12/Java字节码增强/" rel="prev" title="Java字节码增强">
+                Java字节码增强 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring中的核心类"><span class="nav-number">2.</span> <span class="nav-text">Spring中的核心类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring常用的类和接口"><span class="nav-number">3.</span> <span class="nav-text">Spring常用的类和接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InitialingBean和DisposableBean"><span class="nav-number">4.</span> <span class="nav-text">InitialingBean和DisposableBean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bean的生命周期"><span class="nav-number">5.</span> <span class="nav-text">Bean的生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BeanNameAware、ApplicationContextAware和BeanFactoryAware"><span class="nav-number">6.</span> <span class="nav-text">BeanNameAware、ApplicationContextAware和BeanFactoryAware</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FactoryBean"><span class="nav-number">7.</span> <span class="nav-text">FactoryBean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BeanPostProcessor"><span class="nav-number">8.</span> <span class="nav-text">BeanPostProcessor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BeanFactoryPostProcessor"><span class="nav-number">9.</span> <span class="nav-text">BeanFactoryPostProcessor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InstantiationAwareBeanPostProcessor"><span class="nav-number">10.</span> <span class="nav-text">InstantiationAwareBeanPostProcessor</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

@@ -1,0 +1,944 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="创建型模式,Builder," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言在开发中，经常用到builder设计模式，但感觉最常见的应用场景就是构造对象参数较多的时候，最近又用到了建造者模式，故在此梳理总结一下。 定义：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。首先这是一个复杂的对象，也就是说对象的创建过程比较复杂，可能需要N多个组件来完成整个对象的创建，这个时候为了符合“单一职责”，我们将对象的构建过程分离出来，通过建造者来完成对象组">
+<meta name="keywords" content="创建型模式,Builder">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式：建造者模式">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/03/02/设计模式：构建者模式/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="前言在开发中，经常用到builder设计模式，但感觉最常见的应用场景就是构造对象参数较多的时候，最近又用到了建造者模式，故在此梳理总结一下。 定义：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。首先这是一个复杂的对象，也就是说对象的创建过程比较复杂，可能需要N多个组件来完成整个对象的创建，这个时候为了符合“单一职责”，我们将对象的构建过程分离出来，通过建造者来完成对象组">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/builder.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.649Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="设计模式：建造者模式">
+<meta name="twitter:description" content="前言在开发中，经常用到builder设计模式，但感觉最常见的应用场景就是构造对象参数较多的时候，最近又用到了建造者模式，故在此梳理总结一下。 定义：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。首先这是一个复杂的对象，也就是说对象的创建过程比较复杂，可能需要N多个组件来完成整个对象的创建，这个时候为了符合“单一职责”，我们将对象的构建过程分离出来，通过建造者来完成对象组">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/builder.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/03/02/设计模式：构建者模式/"/>
+
+
+
+
+
+  <title> 设计模式：建造者模式 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/03/02/设计模式：构建者模式/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                设计模式：建造者模式
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-02T20:34:46+08:00">
+                2019-03-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index">
+                    <span itemprop="name">设计模式</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在开发中，经常用到builder设计模式，但感觉最常见的应用场景就是构造对象参数较多的时候，最近又用到了建造者模式，故在此梳理总结一下。</p>
+<p>定义：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。首先这是一个复杂的对象，也就是说对象的创建过程比较复杂，可能需要N多个组件来完成整个对象的创建，这个时候为了符合“单一职责”，我们将对象的构建过程分离出来，通过建造者来完成对象组件的创建，再通过一个指挥者类完成组装生成一个完整的产品。</p>
+<a id="more"></a>
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><ol>
+<li>如果一个对象有非常复杂的内部结构「这些产品通常有很多属性」，那么使用建造者模式</li>
+<li>如果想把复杂对象的创建和使用分离开来，那么使用建造者模式使用相同的创建步骤可以创建不同的产品</li>
+</ol>
+<h3 id="UML图"><a href="#UML图" class="headerlink" title="UML图"></a>UML图</h3><p><img src="/images/builder.png" alt="Alt text"></p>
+<p>说明：</p>
+<ul>
+<li>Builder: 抽象类，用于规范子类建造者的创建产品对象的各个组件</li>
+<li>ConcreteBuilder: 具体建造者,实现抽象类定义的所有方法。</li>
+<li>Product: 产品类，一般是一个比较复杂的对象</li>
+<li>Director: 负责安排已有模块的顺序，然后告诉Builder开始建造。</li>
+</ul>
+<h3 id="经典写法"><a href="#经典写法" class="headerlink" title="经典写法"></a>经典写法</h3><ol>
+<li>产品类：房子对象</li>
+</ol>
+<pre><code>public class House {
+    // 打地基
+    private String foundation ;
+    // 盖框架
+    private String frame ;
+    // 浇筑
+    private String pouring ;
+    ... 省略 setter 和 getter 
+}
+</code></pre><ol start="2">
+<li>抽象建造者「包工头」–Builder</li>
+</ol>
+<pre><code>public abstract class HouseBuilder {
+    private House house = new House();
+    // 打地基
+    public abstract void doFoundation();
+    // 盖框架
+    public abstract void doFrame() ;
+    // 浇灌
+    public abstract void dpPouring() ;
+    // 房子建成
+    public House createHouse() {
+        return house;
+    }
+}
+</code></pre><ol start="3">
+<li>具体建造者「工人」–盖平房</li>
+</ol>
+<pre><code>public class PingFangBuilder extends  HouseBuilder {
+    @Override
+    public void doFoundation() {
+        house.setFoundation(&quot;盖平房的地基&quot;);
+    }
+
+    @Override
+    public void doFrame() {
+        house.setFrame(&quot;盖平房的框架&quot;);
+    }
+
+    @Override
+    public void dpPouring() {
+        house.setPouring(&quot;盖平房的浇灌&quot;);
+    }
+}
+</code></pre><ol start="4">
+<li>具体建造者「工人」–盖楼房</li>
+</ol>
+<pre><code>public class LouFangBuilder extends  HouseBuilder {
+    @Override
+    public void doFoundation() {
+        house.setFoundation(&quot;盖楼房的地基&quot;);
+    }
+
+    @Override
+    public void doFrame() {
+        house.setFrame(&quot;盖楼房的框架&quot;);
+    }
+
+    @Override
+    public void dpPouring() {
+        house.setPouring(&quot;盖楼房的浇灌&quot;);
+    }
+}
+</code></pre><ol start="5">
+<li>指挥者</li>
+</ol>
+<pre><code>public class HouseDirector {
+    // 指挥包工头
+    public House buildHouse(HouseBuilder houseBuilder){
+        houseBuilder.doFoundation();
+        houseBuilder.doFrame();
+        houseBuilder.dpPouring();
+        return houseBuilder.createHouse();
+    }
+}
+</code></pre><ol start="6">
+<li>测试 – 盖楼房 </li>
+</ol>
+<pre><code>public class Client {
+
+    public static void main(String[] args) {
+        HouseBuilder builder = new LouFangBuilder();
+        HouseDirector director = new HouseDirector();
+        House house = director.buildHouse(builder);
+    }
+}
+</code></pre><h3 id="日常写法-内部Builder"><a href="#日常写法-内部Builder" class="headerlink" title="日常写法-内部Builder"></a>日常写法-内部Builder</h3><p>上面为builder模式经典的写法，很少写的那么标准或者那么复杂，大多数情况下builder模式主要是为了防止在构建对象时传递太多的参数。</p>
+<pre><code>public class Person {
+
+    private String name;
+    private int age;
+    private String sex;
+    private String country;
+
+    private Person(String name, int age, String sex, String country) {
+        this.name = name;
+        this.age = age;
+        this.sex = sex;
+        this.country = country;
+    }
+
+    public static class Builder {
+        private String name;
+        private int age;
+        private String sex;
+        private String country;
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setAge(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public Builder setSex(String sex) {
+            this.sex = sex;
+            return this;
+        }
+
+        public Builder setCountry(String country) {
+            this.country = country;
+            return this;
+        }
+
+        public Person builder() {
+            return new Person(name, age, sex, country);
+        }
+    }
+}
+
+//使用
+public class Client {
+    public static void main(String[] args) {
+        Person person = new Person.Builder()
+                    .setAge(18)
+                    .setCountry(&quot;中国&quot;)
+                    .setName(&quot;张三&quot;)
+                    .setSex(&quot;男&quot;)
+                    .builder();
+    }
+}
+</code></pre><p>这种模式是建造者模式的简化变种，将Builder类置于Product类的内部，通过builder()方法完成产品的组装。虽然代码简化只有一个类，但依旧符合建造者模式的思想。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>建造者模式将一个复杂对象的构建与它的表示分离，使得客户端通过创建不同的建造者即可创建出不同的对象。<font color="red">且通过分离的方式，将复杂的创建过程分离出来，符合“单一职责”规范。新的不同对象可以通过新增建造者类生成，符合“开闭原则”。</font>但建造者类的使用范围也有一定的限制，建造者模式创建的产品都有一定的相似性，如果所创建的产品差异性很大，则不适合建造者模式。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/创建型模式/" rel="tag"><i class="fa fa-tag"></i> 创建型模式</a>
+          
+            <a href="/tags/Builder/" rel="tag"><i class="fa fa-tag"></i> Builder</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/12/理解使用python装饰器/" rel="next" title="理解使用python装饰器">
+                <i class="fa fa-chevron-left"></i> 理解使用python装饰器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/03/Redis分布式锁/" rel="prev" title="Redis分布式锁">
+                Redis分布式锁 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UML图"><span class="nav-number">3.</span> <span class="nav-text">UML图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#经典写法"><span class="nav-number">4.</span> <span class="nav-text">经典写法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#日常写法-内部Builder"><span class="nav-number">5.</span> <span class="nav-text">日常写法-内部Builder</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

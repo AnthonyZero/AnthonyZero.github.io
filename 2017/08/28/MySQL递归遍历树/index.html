@@ -1,0 +1,811 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MySQL,递归,存储过程," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="SQL递归众所周知，目前的Mysql版本中并不支持直接的递归查询，但是通过递归到迭代转化的思路，还是可以在一句SQL内实现树的递归查询的。这个得益于Mysql允许在SQL存储过程内使用@变量 创建表 机构信息CREATE TABLE def_org_info (  org_id bigint(20) NOT NULL COMMENT ‘机构ID’,  org_type int(11) NOT NU">
+<meta name="keywords" content="MySQL,递归,存储过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL递归遍历树">
+<meta property="og:url" content="https://anthonyzero.github.io/2017/08/28/MySQL递归遍历树/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="SQL递归众所周知，目前的Mysql版本中并不支持直接的递归查询，但是通过递归到迭代转化的思路，还是可以在一句SQL内实现树的递归查询的。这个得益于Mysql允许在SQL存储过程内使用@变量 创建表 机构信息CREATE TABLE def_org_info (  org_id bigint(20) NOT NULL COMMENT ‘机构ID’,  org_type int(11) NOT NU">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/mysql01.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/mysql02.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/mysql03.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.468Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL递归遍历树">
+<meta name="twitter:description" content="SQL递归众所周知，目前的Mysql版本中并不支持直接的递归查询，但是通过递归到迭代转化的思路，还是可以在一句SQL内实现树的递归查询的。这个得益于Mysql允许在SQL存储过程内使用@变量 创建表 机构信息CREATE TABLE def_org_info (  org_id bigint(20) NOT NULL COMMENT ‘机构ID’,  org_type int(11) NOT NU">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/mysql01.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2017/08/28/MySQL递归遍历树/"/>
+
+
+
+
+
+  <title> MySQL递归遍历树 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2017/08/28/MySQL递归遍历树/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                MySQL递归遍历树
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-08-28T22:56:08+08:00">
+                2017-08-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SQL/" itemprop="url" rel="index">
+                    <span itemprop="name">SQL</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="SQL递归"><a href="#SQL递归" class="headerlink" title="SQL递归"></a>SQL递归</h3><p>众所周知，目前的Mysql版本中并不支持直接的递归查询，但是通过递归到迭代转化的思路，还是可以在一句SQL内实现树的递归查询的。这个得益于Mysql允许在SQL存储过程内使用@变量</p>
+<h3 id="创建表-机构信息"><a href="#创建表-机构信息" class="headerlink" title="创建表 机构信息"></a>创建表 机构信息</h3><p>CREATE TABLE <code>def_org_info</code> (<br>  <code>org_id</code> bigint(20) NOT NULL COMMENT ‘机构ID’,<br>  <code>org_type</code> int(11) NOT NULL COMMENT ‘机构类型 1 企业 2 部门 3 分公司 4 配送中心 5 门店 6 车间 7 质检部 8 仓库’,<br>  <code>up_org_id</code> bigint(20) NOT NULL COMMENT ‘上级机构ID,顶级机构填0’,<br>  <code>org_no</code> varchar(32) NOT NULL COMMENT ‘编号’,<br>  <code>org_name</code> varchar(64) NOT NULL COMMENT ‘名称’,<br>  <code>org_simple_name</code> varchar(64) DEFAULT NULL COMMENT ‘简称’,<br>  <code>org_pinyin</code> varchar(64) DEFAULT NULL COMMENT ‘机构拼音’,<br>  <a id="more"></a><br>  <code>area_id</code> int(11) DEFAULT NULL COMMENT ‘区域, 数据字典’,<br>  <code>province_id</code> bigint(20) DEFAULT NULL COMMENT ‘省份ID’,<br>  <code>city_id</code> bigint(20) DEFAULT NULL COMMENT ‘城市ID’,<br>  <code>address</code> varchar(256) DEFAULT NULL COMMENT ‘地址’,<br>  <code>tel_phone</code> varchar(32) DEFAULT NULL COMMENT ‘电话’,<br>  <code>rela_name</code> varchar(32) DEFAULT NULL COMMENT ‘联系人’,<br>  <code>email</code> varchar(32) DEFAULT NULL COMMENT ‘邮箱’,<br>  <code>is_depart_item</code> int(11) DEFAULT NULL COMMENT ‘是否启用部门与品项关系设定,org_type=2时有值 1 启用 0 不启用’,<br>  <code>is_join</code> int(11) DEFAULT NULL COMMENT ‘是否加盟 org_type=4,5是有值 1 是 0 否’,<br>  <code>is_area_center</code> int(11) DEFAULT NULL COMMENT ‘是否区域配送中心 org_type=4时有值 1 是 0 否’,<br>  <code>account_period</code> bigint(20) DEFAULT NULL COMMENT ‘启用会计期 org_type=4,5时有值’,<br>  <code>abc_cate</code> int(11) DEFAULT NULL COMMENT ‘ABC分类,org_type=5时有值’,<br>  <code>is_store</code> int(11) DEFAULT NULL COMMENT ‘是否可作为店间调拨发货门店 1 是 0 否’,<br>  <code>is_receive</code> int(11) DEFAULT NULL COMMENT ‘是否启用应收应付 org_type=4,5时有值 1 是 0 否’,<br>  <code>is_online</code> int(11) DEFAULT NULL COMMENT ‘是否线上门店 1 是 0 否’,<br>  <code>warehouses_type</code> int(11) DEFAULT NULL COMMENT ‘仓库类型  org_type=8时有值 1 档口库 2 非档口库’,<br>  <code>is_warehouses_item</code> int(11) DEFAULT NULL COMMENT ‘是否启用仓库与品项关系设定 org_type=8时有值 1 是 0 否’,<br>  <code>state</code> int(11) NOT NULL COMMENT ‘启用标志 1 启用  0 不启用’,<br>  <code>create_time</code> datetime NOT NULL COMMENT ‘创建时间’,<br>  <code>create_mem_id</code> bigint(20) NOT NULL COMMENT ‘创建人’,<br>  <code>modify_time</code> datetime DEFAULT NULL COMMENT ‘最后修改时间’,<br>  <code>modify_mem_id</code> bigint(20) DEFAULT NULL COMMENT ‘最后修改人’,<br>  <code>delete_mark</code> int(11) NOT NULL COMMENT ‘删除标志 0 未删除 1 已删除（移到回收站）2 彻底删除’,<br>  PRIMARY KEY (<code>org_id</code>)<br>) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=’机构信息表’     </p>
+<h3 id="导入数据"><a href="#导入数据" class="headerlink" title="导入数据"></a>导入数据</h3><p><img src="/images/mysql01.png" alt="Alt text"> </p>
+<h3 id="创建存储过程"><a href="#创建存储过程" class="headerlink" title="创建存储过程"></a>创建存储过程</h3><p>存储过程的入参为机构Id <code>orgid</code> int, 返回值为varchar(4000)：机构树（包括树头）机构ID<br>以逗号分隔的字符串。利用find_in_set()函数和group_concat()函数实现递归查询</p>
+<pre><code>BEGIN
+    #根据父id递归查询所有子节点
+    DECLARE oTemp VARCHAR(4000);
+    DECLARE oTempChild VARCHAR(4000);
+
+    SET oTemp = &apos;&apos;;
+    SET oTempChild = CAST(orgid AS CHAR);
+
+    WHILE oTempChild IS NOT NULL
+    DO
+    SET oTemp = CONCAT(oTemp,&apos;,&apos;,oTempChild);
+    #得到的结果赋值给变量oTempChild                             
+    SELECT GROUP_CONCAT(org_id) INTO oTempChild FROM 
+    def_org_info WHERE FIND_IN_SET(up_org_id,oTempChild) &gt; 0;
+                       #只有当机构的上级机构存在于oTempChild
+    END WHILE;
+    RETURN oTemp;
+END
+</code></pre><blockquote>
+<p>FIND_IN_SET(str,strlist)函数：查询字段(strlist)中包含(str)的结果，返回结果为null或记录。 strlist参数以,分隔 如 (1,2,6,8). Find_IN_SET 是精确匹配，查询的结果要小于like查询的结果。<br>GROUP_CONCAT函数是典型的字符串连接函数 例如select id,group_concat(name) from aa group by id;  根据Id分组之后 把每一组的name默认逗号分隔拼成字符串。</p>
+</blockquote>
+<h3 id="调用方式"><a href="#调用方式" class="headerlink" title="调用方式"></a>调用方式</h3><h4 id="调用存储过程返回某机构树的机构ID集合"><a href="#调用存储过程返回某机构树的机构ID集合" class="headerlink" title="调用存储过程返回某机构树的机构ID集合"></a>调用存储过程返回某机构树的机构ID集合</h4><p><img src="/images/mysql02.png" alt="Alt text"> </p>
+<h4 id="查询机构树（筛选出未启用和已经删除的机构）"><a href="#查询机构树（筛选出未启用和已经删除的机构）" class="headerlink" title="查询机构树（筛选出未启用和已经删除的机构）"></a>查询机构树（筛选出未启用和已经删除的机构）</h4><p><img src="/images/mysql03.png" alt="Alt text"> </p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MySQL/" rel="tag"><i class="fa fa-tag"></i> MySQL</a>
+          
+            <a href="/tags/递归/" rel="tag"><i class="fa fa-tag"></i> 递归</a>
+          
+            <a href="/tags/存储过程/" rel="tag"><i class="fa fa-tag"></i> 存储过程</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/20/MySQL横纵表相互转换/" rel="next" title="MySQL横纵表相互转换">
+                <i class="fa fa-chevron-left"></i> MySQL横纵表相互转换
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/04/Java学习系列：HashMap实现原理/" rel="prev" title="Java学习系列：HashMap实现原理">
+                Java学习系列：HashMap实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#SQL递归"><span class="nav-number">1.</span> <span class="nav-text">SQL递归</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建表-机构信息"><span class="nav-number">2.</span> <span class="nav-text">创建表 机构信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导入数据"><span class="nav-number">3.</span> <span class="nav-text">导入数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建存储过程"><span class="nav-number">4.</span> <span class="nav-text">创建存储过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用方式"><span class="nav-number">5.</span> <span class="nav-text">调用方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#调用存储过程返回某机构树的机构ID集合"><span class="nav-number">5.1.</span> <span class="nav-text">调用存储过程返回某机构树的机构ID集合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询机构树（筛选出未启用和已经删除的机构）"><span class="nav-number">5.2.</span> <span class="nav-text">查询机构树（筛选出未启用和已经删除的机构）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

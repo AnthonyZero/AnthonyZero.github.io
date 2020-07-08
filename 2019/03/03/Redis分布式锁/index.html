@@ -1,0 +1,978 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="并发,分布式,锁," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言在Java多线程编程的时候，锁是一个很重要也很基础的概念，锁可以看做是多线程情况下访问共享资源的一种线程同步机制。这是对于单进程应用而言的，即所有线程都在同一个JVM进程里的时候，使用Java语言提供的锁机制可以起到对共享资源进行同步的作用。如果分布式环境下多个不同线程需要对共享资源进行同步，那么用Java的锁机制就无法实现了，这个时候就必须借助分布式锁来解决分布式环境下共享资源的同步问题。">
+<meta name="keywords" content="并发,分布式,锁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis分布式锁">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/03/03/Redis分布式锁/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="前言在Java多线程编程的时候，锁是一个很重要也很基础的概念，锁可以看做是多线程情况下访问共享资源的一种线程同步机制。这是对于单进程应用而言的，即所有线程都在同一个JVM进程里的时候，使用Java语言提供的锁机制可以起到对共享资源进行同步的作用。如果分布式环境下多个不同线程需要对共享资源进行同步，那么用Java的锁机制就无法实现了，这个时候就必须借助分布式锁来解决分布式环境下共享资源的同步问题。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://anthonyzero.github.io/images/backgroud/redislock.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/backgroud/redislock2.png">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.490Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis分布式锁">
+<meta name="twitter:description" content="前言在Java多线程编程的时候，锁是一个很重要也很基础的概念，锁可以看做是多线程情况下访问共享资源的一种线程同步机制。这是对于单进程应用而言的，即所有线程都在同一个JVM进程里的时候，使用Java语言提供的锁机制可以起到对共享资源进行同步的作用。如果分布式环境下多个不同线程需要对共享资源进行同步，那么用Java的锁机制就无法实现了，这个时候就必须借助分布式锁来解决分布式环境下共享资源的同步问题。">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/backgroud/redislock.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/03/03/Redis分布式锁/"/>
+
+
+
+
+
+  <title> Redis分布式锁 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/03/03/Redis分布式锁/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Redis分布式锁
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-03T10:36:08+08:00">
+                2019-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/images/backgroud/redislock.png" alt="Alt text"></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在Java多线程编程的时候，锁是一个很重要也很基础的概念，锁可以看做是多线程情况下访问共享资源的一种线程同步机制。这是对于单进程应用而言的，即所有线程都在同一个JVM进程里的时候，使用Java语言提供的锁机制可以起到对共享资源进行同步的作用。如果分布式环境下多个不同线程需要对共享资源进行同步，那么用Java的锁机制就无法实现了，这个时候就必须借助分布式锁来解决分布式环境下共享资源的同步问题。</p>
+<a id="more"></a>
+<h3 id="基本要求"><a href="#基本要求" class="headerlink" title="基本要求"></a>基本要求</h3><p>实现一个分布式锁, 我们至少要考虑它能满足以下的这些需求:</p>
+<ul>
+<li>互斥, 就是要在任何的时刻, 同一个锁只能够有一个客户端用户占用</li>
+<li>不会死锁, 就算持有锁的客户端在持有期间崩溃了, 但是也不会影响后续的客户端加锁</li>
+<li>谁加锁谁解锁, 很好理解, 加锁和解锁的必须是同一个客户端</li>
+</ul>
+<h3 id="加锁"><a href="#加锁" class="headerlink" title="加锁"></a>加锁</h3><p>从 Redis 2.6.12 版本开始， SET 命令的行为可以通过一系列参数来修改：通过NX PX参数来实现加锁的效果（NX 参数可以保证在这个 key 不存在的情况下写入成功，再加上 PX 参数可以让该 key 在超时时间之后自动删除）。<br><img src="/images/backgroud/redislock2.png" alt="Alt text"></p>
+<pre><code>public boolean lock(String key, String request, int expireTime) {
+    Jedis jedis = null;
+    try {
+        jedis = jedisPool.getResource();
+        String result = jedis.set(key, request, &quot;NX&quot;, &quot;PX&quot;, expireTime * TIME);
+        if (LOCK_SUCCESS_MSG.equals(result)) {
+            logger.info(&quot;Thread id:&quot;+Thread.currentThread().getId() + &quot; lock success!Time:&quot;+ LocalTime.now());
+
+            //开启后台线程续期
+            if (openRenewal) {
+                long sleepTime = (long)(expireTime * TIME * renewalPercentage);
+                ExpirationRenewalProcessor processor = new ExpirationRenewalProcessor(jedisPool.getResource(),renewalScript, key,
+                        request, expireTime*TIME, sleepTime);
+                scheduleExpirationRenewal(processor);
+            }
+            return true;
+        } else {
+            logger.info(&quot;Thread id:&quot;+Thread.currentThread().getId() + &quot; lock fail,Time:&quot;+ LocalTime.now());
+            return false;
+        }
+    } catch (Exception ex) {
+        logger.error(&quot;lock error&quot;);
+    } finally {
+        if (jedis != null) {
+            jedis.close();
+        }
+    }
+    return false;
+}
+</code></pre><ul>
+<li>第一个参数Key是锁的名字, 这个由具体业务逻辑控制, 保证唯一即可</li>
+<li>第二个参数是客户端请求ID, 这样做的目的主要是为了保证加解锁的唯一性. 这样我们就可以知道该锁是哪个客户端加的. 保证唯一(可使用UUID或者雪花算法)</li>
+<li>第三个参数是过期时间, 以秒为单位。</li>
+</ul>
+<blockquote>
+<p>上述代码通过设置NX保证了只能有一个客户端获取到锁, 满足互斥性; 加入了过期时间, 保证在客户端崩溃后不会造成死锁; 请求ID的作用是用来标识客户端, 这样客户端在解锁的时候可以进行校验是否同一个客户端.<font color="red">如果构造分布式锁的时候开启了自动续期过期时间，那么会启动后台线程自动续期.</font></p>
+</blockquote>
+<h3 id="解锁"><a href="#解锁" class="headerlink" title="解锁"></a>解锁</h3><p>当锁拥有的客户端完成了对共享资源的操作后, 释放锁需要用到Lua脚本, 使用lua脚本可以保证使用redis的多个命令操作的原子性: <font color="red">每次解锁时都需要判断锁是否是自己的，相等才执行 del 命令</font></p>
+<pre><code>//lua 解锁脚本
+if redis.call(&apos;get&apos;, KEYS[1]) == ARGV[1] then
+    return redis.call(&apos;del&apos;, KEYS[1])
+else
+    return 0
+end
+
+//释放锁代码
+public boolean unlock(String key, String request) {
+    Jedis jedis = null;
+    try {
+        jedis = jedisPool.getResource();
+        Object result = jedis.eval(unlockScript, Collections.singletonList(key), Collections.singletonList(request));
+        if (UNLOCK_SUCCESS_MSG.equals(result)) {
+            logger.info(&quot;Thread id:&quot;+Thread.currentThread().getId() + &quot; unlock success!Time:&quot;+ LocalTime.now());
+            return true;
+        } else {
+            logger.info(&quot;Thread id:&quot;+Thread.currentThread().getId() + &quot; unlock fail,Time:&quot;+ LocalTime.now());
+            return false;
+        }
+    } catch (Exception ex) {
+        logger.error(&quot;unlock error&quot;);
+    } finally {
+        if (jedis != null) {
+            jedis.close();
+        }
+        if (openRenewal &amp;&amp; processor != null) {
+            //停止续期
+            processor.stop();
+            daemonThread.interrupt();
+        }
+    }
+    return false;
+}
+</code></pre><blockquote>
+<p>解锁的时候如果使用的锁开启了自动续期，那么需要中断后台线程停止续期。</p>
+</blockquote>
+<h3 id="定时续期"><a href="#定时续期" class="headerlink" title="定时续期"></a>定时续期</h3><p>如果key 超时之后业务并没有执行完毕但却自动释放锁了，这时其它线程就会拿到锁，同一时间有多个线程执行同一段代码，这样就会导致并发问题。</p>
+<font color="red">而合理设置key的过期时间又并不容易，需要对业务熟悉通过经验去配置，设置过小，锁自动超时释放 发生并发问题的概率就会增加;设置过大，万一服务出现异常无法正常释放锁，那么这种持有这把锁的异常时间也就越长，其它线程迟迟拿不到锁。</font>      
+
+<p>想到一个解决方法:我们可以加锁成功后，然后启动一个守护线程，让守护线程在一段时间后，重新去设置这个锁的过期时间。但在实际操作中，我们要注意以下3点：</p>
+<ul>
+<li>和释放锁的情况一致，我们需要先判断锁的对象是否没有变。否则会造成无论谁持有锁，守护线程都会去重新设置锁的过期时间。</li>
+<li>如果持有锁的线程已经处理完业务了，那么守护线程也应该被销毁。不能主线程都挂了，守护者还在那里继续浪费资源。</li>
+<li>守护线程要在合理的时间再去重新设置锁的过期时间，否则会造成资源的浪费。不能动不动就去续，选择一个合适的时间间隔定时续。</li>
+</ul>
+<p><strong>lua脚本以及代码实现</strong></p>
+<pre><code>//续期lua脚本
+if redis.call(&apos;get&apos;, KEYS[1]) == ARGV[1] then
+    return redis.call(&apos;pexpire&apos;,KEYS[1],ARGV[2])
+else
+    return 0
+end
+
+//守护线程 实现Runnable
+public class ExpirationRenewalProcessor implements Runnable {
+    private static Logger logger = LoggerFactory.getLogger(ExpirationRenewalProcessor.class);
+    //expire命令执行成功返回结果
+    private static final Long EXPIRE_SUCCESS_MSG = 1L;
+    private Jedis jedis;
+    // lua 脚本
+    private String script;
+    //键
+    private String key;
+    //代表获取锁的客户端标识
+    private String request;
+    //重置key的过期时间
+    private long expireTime;
+    //线程每次睡眠的时间
+    private long sleepTime;
+    //线程结束的标志
+    private volatile boolean signal = true;
+
+    public ExpirationRenewalProcessor(Jedis jedis, String script, String key,
+                                      String request, long expireTime, long sleepTime) {
+        this.jedis = jedis;
+        this.script = script;
+        this.key = key;
+        this.request = request;
+        this.expireTime = expireTime;
+        this.sleepTime = sleepTime;
+    }
+
+    //标志位设置为结束标识
+    public void stop() {
+        this.signal = false;
+    }
+
+    @Override
+    public void run() {
+        while (signal) {
+            try {
+                Thread.sleep(sleepTime);
+                Object result = jedis.eval(script, Collections.singletonList(key), Arrays.asList(request, String.valueOf(expireTime)));
+                if (EXPIRE_SUCCESS_MSG.equals(result)) {
+                    logger.info(&quot;Daemon thread renewal success&quot;);
+                } else {
+                    logger.info(&quot;Daemon thread renewal fail&quot;);
+                    this.stop();
+                }
+            } catch (InterruptedException e) {
+                logger.info(&quot;Daemon thread is interrupted forcibly&quot;);
+            } catch (Exception e) {
+                logger.info(&quot;Daemon thread run error&quot;);
+                this.stop();
+            }
+        }
+        if (jedis != null) {
+            jedis.close();
+        }
+        logger.info(&quot;Daemon thread stopped&quot;);
+    }
+}
+</code></pre><blockquote>
+<p>续期的时候还是通过执行lua脚本保证原子性，每次续期先sleep等待一段时间（等待时间=key过期时间 * 比例）；这个比例（等待时间占过期时间的比例）由用户决定,0到1的范围内。最后通过pexpire命令重置过期时间为当初设定的时间。</p>
+</blockquote>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>构造线程池开启20个线程模拟业务执行：执行结果如下：</p>
+<pre><code>Thread id:62 lock success!Time:16:06:02.029
+Thread id:63 lock fail,Time:16:06:02.037
+Thread id:67 lock fail,Time:16:06:02.037
+Thread id:61 lock fail,Time:16:06:02.041
+Thread id:56 lock fail,Time:16:06:02.041
+Thread id:51 lock fail,Time:16:06:02.041
+Thread id:60 lock fail,Time:16:06:02.041
+Thread id:57 lock fail,Time:16:06:02.041
+Thread id:64 lock fail,Time:16:06:02.042
+Thread id:59 lock fail,Time:16:06:02.042
+Thread id:65 lock fail,Time:16:06:02.042
+Thread id:58 lock fail,Time:16:06:02.042
+Thread id:50 lock fail,Time:16:06:02.050
+Thread id:54 lock fail,Time:16:06:02.050
+Thread id:55 lock fail,Time:16:06:02.054
+Thread id:68 lock fail,Time:16:06:02.055
+Thread id:53 lock fail,Time:16:06:02.056
+Thread id:52 lock fail,Time:16:06:02.054
+Thread id:69 lock fail,Time:16:06:02.054
+Thread id:66 lock fail,Time:16:06:02.055
+Daemon thread renewal success
+Thread id:62 unlock success!Time:16:06:04.275
+Daemon thread is interrupted forcibly
+Daemon thread stopped
+</code></pre><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li>用Redis做分布式锁相比其他分布式锁(zookeeper)实现更简单，速度更快</li>
+<li><font color="red">在加锁成功且开启了守护线程的话 代码会初始化守护线程的内部参数，然后通过start函数启动线程，最后在业务执行完释放锁之后，设置守护线程的关闭标记，通过interrupt()去中断sleep状态，保证守护线程及时销毁。</font></li>
+<li>本文适用于单机版，如果Redis是多机部署的，那么可以尝试使用Redisson实现分布式锁</li>
+</ol>
+<p><strong>源码以及使用示例请移步到</strong> <a href="https://github.com/AnthonyZero/distributed-lock-redis" target="_blank" rel="noopener">Github地址</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
+          
+            <a href="/tags/分布式/" rel="tag"><i class="fa fa-tag"></i> 分布式</a>
+          
+            <a href="/tags/锁/" rel="tag"><i class="fa fa-tag"></i> 锁</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/02/设计模式：构建者模式/" rel="next" title="设计模式：建造者模式">
+                <i class="fa fa-chevron-left"></i> 设计模式：建造者模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/12/布隆过滤器/" rel="prev" title="布隆过滤器">
+                布隆过滤器 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基本要求"><span class="nav-number">2.</span> <span class="nav-text">基本要求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加锁"><span class="nav-number">3.</span> <span class="nav-text">加锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解锁"><span class="nav-number">4.</span> <span class="nav-text">解锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定时续期"><span class="nav-number">5.</span> <span class="nav-text">定时续期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">6.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

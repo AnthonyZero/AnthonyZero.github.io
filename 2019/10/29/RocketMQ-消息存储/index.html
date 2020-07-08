@@ -1,0 +1,812 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MQ," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="每个Broker都对应有一个MessageStore，专门用来存储发送到它的消息，不过MessageStore本身不是文件，只是存储的一个抽象，MessageStore 中保存着一个 CommitLog，CommitLog 维护了一个 MappedFileQueue，而MappedFileQueue 中又维护了多个 MappedFile，每个MappedFile都会映射到文件系统中一个文件，这些文">
+<meta name="keywords" content="MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ-消息存储">
+<meta property="og:url" content="https://anthonyzero.github.io/2019/10/29/RocketMQ-消息存储/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="每个Broker都对应有一个MessageStore，专门用来存储发送到它的消息，不过MessageStore本身不是文件，只是存储的一个抽象，MessageStore 中保存着一个 CommitLog，CommitLog 维护了一个 MappedFileQueue，而MappedFileQueue 中又维护了多个 MappedFile，每个MappedFile都会映射到文件系统中一个文件，这些文">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://i.loli.net/2019/10/29/CHqyo5pA6WKe12Z.png">
+<meta property="og:updated_time" content="2019-10-29T14:23:39.929Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RocketMQ-消息存储">
+<meta name="twitter:description" content="每个Broker都对应有一个MessageStore，专门用来存储发送到它的消息，不过MessageStore本身不是文件，只是存储的一个抽象，MessageStore 中保存着一个 CommitLog，CommitLog 维护了一个 MappedFileQueue，而MappedFileQueue 中又维护了多个 MappedFile，每个MappedFile都会映射到文件系统中一个文件，这些文">
+<meta name="twitter:image" content="https://i.loli.net/2019/10/29/CHqyo5pA6WKe12Z.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2019/10/29/RocketMQ-消息存储/"/>
+
+
+
+
+
+  <title> RocketMQ-消息存储 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2019/10/29/RocketMQ-消息存储/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RocketMQ-消息存储
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-29T21:53:49+08:00">
+                2019-10-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>每个Broker都对应有一个MessageStore，专门用来存储发送到它的消息，不过MessageStore本身不是文件，只是存储的一个抽象，MessageStore 中保存着一个 CommitLog，CommitLog 维护了一个 MappedFileQueue，而MappedFileQueue 中又维护了多个 MappedFile，每个MappedFile都会映射到文件系统中一个文件，这些文件才是真正的存储消息的地方，MappedFile的文件名为它记录的第一条消息的全局物理偏移量。<br><img src="https://i.loli.net/2019/10/29/CHqyo5pA6WKe12Z.png" alt="rocketmqstore.png"></p>
+<a id="more"></a>
+<h3 id="消息接收"><a href="#消息接收" class="headerlink" title="消息接收"></a>消息接收</h3><p>从Netty服务端（Broker）接收消息处理器NettyServerHandler入手，NettyServerHandler是NettyRemotingServer的内部类，可在NettyRemotingServer 的源码中看到:<br>它的ServerBootstrap 会在 pipeline 中添加一个 NettyServerHandler 处理器，这个处理器的 channelRead0 方法会调用 NettyRemotingServer 的父类 processMessageReceived 方法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public void processMessageReceived(ChannelHandlerContext ctx, RemotingCommand msg) throws Exception &#123;</span><br><span class="line">        final RemotingCommand cmd = msg;</span><br><span class="line">    if (cmd != null) &#123;</span><br><span class="line">        switch (cmd.getType()) &#123;</span><br><span class="line">            case REQUEST_COMMAND:   //broker服务端处理请求 </span><br><span class="line">                processRequestCommand(ctx, cmd);</span><br><span class="line">                break;</span><br><span class="line">            case RESPONSE_COMMAND: //客户端处理响应</span><br><span class="line">                processResponseCommand(ctx, cmd);</span><br><span class="line">                break;</span><br><span class="line">            default:</span><br><span class="line">                break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>进入processRequestCommand(ctx, cmd)的方法看到以下关键代码：这部分是从 processorTable 里根据 Cmd Code，也就是 SEND_MESSAGE 获取对应的 Processor， Processor 由 2 部分组成，一部分是处理数据的对象，一部分是这个对象所对应的线程池。用于异步处理逻辑，防止阻塞 Netty IO 线程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">final Pair&lt;NettyRequestProcessor, ExecutorService&gt; matched = this.processorTable.get(cmd.getCode());</span><br><span class="line">final Pair&lt;NettyRequestProcessor, ExecutorService&gt; pair = null == matched ? this.defaultRequestProcessor : matched;</span><br><span class="line">......</span><br><span class="line">doBeforeRpcHooks(RemotingHelper.parseChannelRemoteAddr(ctx.channel()), cmd);</span><br><span class="line">final RemotingCommand response = pair.getObject1().processRequest(ctx, cmd);</span><br><span class="line">doAfterRpcHooks(RemotingHelper.parseChannelRemoteAddr(ctx.channel()), cmd, response);</span><br></pre></td></tr></table></figure></p>
+<p>Processor是Broker对于每个请求Code，都注册了对应的处理类，代码可见BrokerController中的registerProcessor()方法.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">this.remotingServer.registerProcessor(RequestCode.SEND_MESSAGE, sendProcessor, this.sendMessageExecutor);</span><br><span class="line">this.remotingServer.registerProcessor(RequestCode.SEND_MESSAGE_V2, sendProcessor, this.sendMessageExecutor);</span><br><span class="line">......</span><br></pre></td></tr></table></figure></p>
+<p>Netty Server根据 Cmd 对象的 Code，就可以找到对应 Processor 类，对数据进行处理。其中用于接收消息的处理类为：SendMessageProcessor。<br>SendMessageProcessor 实现了 NettyRequestProcessor接口，并在接口方法processRequest（）中处理接收到的请求.</p>
+<h3 id="消息存储"><a href="#消息存储" class="headerlink" title="消息存储"></a>消息存储</h3><p>SendMessageProcessor在processRequest（）中调用了sendMessage（）方法来进行消息处理。其中关键代码<strong>this.brokerController.getMessageStore().putMessage(msgInner)</strong> 实现如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">public PutMessageResult putMessage(MessageExtBrokerInner msg) &#123;</span><br><span class="line">    // MessageStore是否被关闭</span><br><span class="line">    if (this.shutdown) &#123;</span><br><span class="line">        log.warn(&quot;message store has shutdown, so putMessage is forbidden&quot;);</span><br><span class="line">        return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);</span><br><span class="line">    &#125;</span><br><span class="line">    // 从节点不允许写入</span><br><span class="line">    if (BrokerRole.SLAVE == this.messageStoreConfig.getBrokerRole()) &#123;</span><br><span class="line">        long value = this.printTimes.getAndIncrement();</span><br><span class="line">        if ((value % 50000) == 0) &#123;</span><br><span class="line">            log.warn(&quot;message store is slave mode, so putMessage is forbidden &quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);</span><br><span class="line">    &#125;</span><br><span class="line">    // mesageStore是否允许写入</span><br><span class="line">    if (!this.runningFlags.isWriteable()) &#123;</span><br><span class="line">        long value = this.printTimes.getAndIncrement();</span><br><span class="line">        if ((value % 50000) == 0) &#123;</span><br><span class="line">            log.warn(&quot;message store is not writeable, so putMessage is forbidden &quot; + this.runningFlags.getFlagBits());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        this.printTimes.set(0);</span><br><span class="line">    &#125;</span><br><span class="line">    // topic消息过长</span><br><span class="line">    if (msg.getTopic().length() &gt; Byte.MAX_VALUE) &#123;</span><br><span class="line">        log.warn(&quot;putMessage message topic length too long &quot; + msg.getTopic().length());</span><br><span class="line">        return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);</span><br><span class="line">    &#125;</span><br><span class="line">    // 消息附加属性过长</span><br><span class="line">    if (msg.getPropertiesString() != null &amp;&amp; msg.getPropertiesString().length() &gt; Short.MAX_VALUE) &#123;</span><br><span class="line">        log.warn(&quot;putMessage message properties length too long &quot; + msg.getPropertiesString().length());</span><br><span class="line">        return new PutMessageResult(PutMessageStatus.PROPERTIES_SIZE_EXCEEDED, null);</span><br><span class="line">    &#125;</span><br><span class="line">    //检查 PageCache 忙不忙.（内存锁定时间超过一秒为繁忙）</span><br><span class="line">    if (this.isOSPageCacheBusy()) &#123;</span><br><span class="line">        return new PutMessageResult(PutMessageStatus.OS_PAGECACHE_BUSY, null);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    long beginTime = this.getSystemClock().now();</span><br><span class="line">    //写数据到commitlog</span><br><span class="line">    PutMessageResult result = this.commitLog.putMessage(msg);</span><br><span class="line"></span><br><span class="line">    long elapsedTime = this.getSystemClock().now() - beginTime;</span><br><span class="line">    if (elapsedTime &gt; 500) &#123; //如果耗时超过 500 毫秒，就会打印日志</span><br><span class="line">        log.warn(&quot;putMessage not in lock elapsed time(ms)=&#123;&#125;, bodyLength=&#123;&#125;&quot;, elapsedTime, msg.getBody().length);</span><br><span class="line">    &#125;</span><br><span class="line">    //记录消息存储时间分布</span><br><span class="line">    this.storeStatsService.setPutMessageEntireTimeMax(elapsedTime);</span><br><span class="line"></span><br><span class="line">    if (null == result || !result.isOk()) &#123;</span><br><span class="line">        //记录消息存储失败次数</span><br><span class="line">        this.storeStatsService.getPutMessageFailedTimes().incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>每个Broker都有一个MessageStore实例，MessageStore本身是一个接口，定义了一些用来存储消息的接口协议，RocketMQ中MessageStore默认的实现类为DefaultMessageStore，Broker在其初始化方法initialize（）中便会初始化好DefaultMessageStore</p>
+</blockquote>
+<p>消息到了CommitLog后，便要开始进入存储逻辑了。CommitLog 中的 PutMessage（）大概（省略一些）步骤如下：</p>
+<ol>
+<li><p>获取写锁，保证同一时刻只处理一条消息的存储操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">事务消息相关TODO ...</span><br><span class="line">putMessageLock.lock();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>从CommitLog中获取最新的MappedFile，追加消息</p>
+</li>
+</ol>
+<blockquote>
+<p>CommitLog 中保存了一个MappedFileQueue，MappedFileQueue初始化的时候配置了消息文件MappedFile的存储路径以及单个MappedFile文件的大小，当某个消息文件写满后，便会生成一个新的MappedFile继续写入消息，所以MappedFileQueue中会按照消息写入时间顺序，维护多个MappedFile。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">if (null == mappedFile || mappedFile.isFull()) &#123;</span><br><span class="line">    mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise</span><br><span class="line">&#125;</span><br><span class="line">if (null == mappedFile) &#123;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br><span class="line">result = mappedFile.appendMessage(msg, this.appendMessageCallback);</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>MappedFile.appendMessage（）方法，此方法最终调用了MappedFile.appendMessagesInner（）: 插入消息到了 MappedFile，并返回插入结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) &#123;</span><br><span class="line">    assert messageExt != null;</span><br><span class="line">    assert cb != null;</span><br><span class="line">    // 获取当前文件的写入位置</span><br><span class="line">    int currentPos = this.wrotePosition.get();</span><br><span class="line">    // 如果当前文件未写满，则进入追加逻辑</span><br><span class="line">    if (currentPos &lt; this.fileSize) &#123;</span><br><span class="line">        //获取需要写入的字节缓冲区</span><br><span class="line">        ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();</span><br><span class="line">        byteBuffer.position(currentPos);</span><br><span class="line">        AppendMessageResult result;</span><br><span class="line">        if (messageExt instanceof MessageExtBrokerInner) &#123;</span><br><span class="line">            // 写数据到 缓存(字节缓冲区)</span><br><span class="line">            result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBrokerInner) messageExt);</span><br><span class="line">        &#125; else if (messageExt instanceof MessageExtBatch) &#123;</span><br><span class="line">            result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBatch) messageExt);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);</span><br><span class="line">        &#125;</span><br><span class="line">        this.wrotePosition.addAndGet(result.getWroteBytes());</span><br><span class="line">        this.storeTimestamp = result.getStoreTimestamp();</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line">    log.error(&quot;MappedFile.appendMessage return null, wrotePosition: &#123;&#125; fileSize: &#123;&#125;&quot;, currentPos, this.fileSize);</span><br><span class="line">    return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<font color="red"><strong> 备注:此时写入消息并没有写入磁盘，而是写入了映射文件的writeBuffer或者mappedByteBuffer（PageCache或堆外内存）</strong> </font>
+
+<ol start="3">
+<li><p>消息追加结束后，释放写锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">//超过500ms写告警日志 写统计消息（写入topic的次数及写入消息大小）</span><br><span class="line">......</span><br><span class="line">putMessageLock.unlock();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>最后处理刷盘和主从数据同步（TODO）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">handleDiskFlush(result, putMessageResult, msg);</span><br><span class="line">handleHA(result, putMessageResult, msg); //HAService</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这里承接上一篇：在这篇中大概知道了Broker接受消息到存储到内存中的过程，接下去跟着源码看RocketMQ的文件刷盘策略也就是如何存放到物理文件中的。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MQ/" rel="tag"><i class="fa fa-tag"></i> MQ</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/23/RocketMQ-消息发送/" rel="next" title="RocketMQ-消息发送">
+                <i class="fa fa-chevron-left"></i> RocketMQ-消息发送
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/30/RocketMQ-刷盘策略/" rel="prev" title="RocketMQ-刷盘策略">
+                RocketMQ-刷盘策略 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#消息接收"><span class="nav-number">1.</span> <span class="nav-text">消息接收</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息存储"><span class="nav-number">2.</span> <span class="nav-text">消息存储</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>

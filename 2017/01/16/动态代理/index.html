@@ -1,0 +1,1019 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring,设计模式,反射," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口； 代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。  Spring中的">
+<meta name="keywords" content="Spring,设计模式,反射">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动态代理">
+<meta property="og:url" content="https://anthonyzero.github.io/2017/01/16/动态代理/index.html">
+<meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
+<meta property="og:description" content="代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口； 代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。  Spring中的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-11T09:37:52.580Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="动态代理">
+<meta name="twitter:description" content="代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口； 代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。  Spring中的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://anthonyzero.github.io/2017/01/16/动态代理/"/>
+
+
+
+
+
+  <title> 动态代理 | AnthonyZero's Bolg </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">AnthonyZero's Bolg</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">Love Coding,Enjoy Life</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2017/01/16/动态代理/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Pingjin">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/logo.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="AnthonyZero's Bolg">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="AnthonyZero's Bolg" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                动态代理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-16T23:23:20+08:00">
+                2017-01-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；"><a href="#代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；" class="headerlink" title="代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；"></a>代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；</h4><blockquote>
+<p>代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。</p>
+</blockquote>
+<h4 id="Spring中的AOP基本原理就是动态代理。"><a href="#Spring中的AOP基本原理就是动态代理。" class="headerlink" title="Spring中的AOP基本原理就是动态代理。"></a>Spring中的AOP基本原理就是动态代理。</h4><p>代理模式可以根据代理类创建时期的不同分为两种:</p>
+<ul>
+<li>静态代理：程序员需要编写特定的源代码，在程序运行前，.class已存在</li>
+<li>动态代理：在系统运行时，Java反射自动生成</li>
+</ul>
+<a id="more"></a>
+<p>静态代理就不记录了，值得好好学学的是动态代理。学习动态代理首先要学一下Java反射，它的实现常见的有两种：</p>
+<ol>
+<li>JDK提供的InvocationHandler 接口和java.lang.reflect 包中的Proxy类</li>
+<li>Cglib实现的动态代理</li>
+</ol>
+<p>动态代理的原理是利用Java反射在运行阶段动态生成任意类型的动态代理类，这不仅简化了程序员的编程工作，也提高了系统的可扩展性，不管我们的业务接口和委托类如何变，代理类都可以不变化</p>
+<hr>
+<h4 id="JDK提供的InvocationHandler-接口和java-lang-reflect-包中的Proxy类"><a href="#JDK提供的InvocationHandler-接口和java-lang-reflect-包中的Proxy类" class="headerlink" title="JDK提供的InvocationHandler 接口和java.lang.reflect 包中的Proxy类"></a>JDK提供的InvocationHandler 接口和java.lang.reflect 包中的Proxy类</h4><p>实例：在现在常见的系统中，登录和退出是用户必备的操作之一，下面我就设计这么一个接口，用于处理用户的登录和退出操作,User.java</p>
+<pre><code>public interface User {  
+    /**
+     * 登录
+     * @param name 用户名
+     * @param pwd 密码
+     * @return
+     */
+    public boolean login(String username, String pwd);
+
+    /**
+     * 退出
+     */
+    public void logout(String username);
+}
+</code></pre><p>实现类如下:UserImpl.java</p>
+<pre><code>public class UserImpl implements User{
+
+    @Override
+    public boolean login(String username, String pwd) {
+        // 简化问题，直接登录成功
+        System.out.println(username+&quot; 登录成功.&quot;);
+        return true;
+    }
+
+    @Override
+    public void logout(String username) {
+        System.out.println(username+&quot; 成功退出.&quot;);
+    }
+}
+</code></pre><p>好了，通过接口我们成功实现了用户的登录和退出，但现在有了一个新功能，我们需要统计一下当前登录后的在线人数，怎么办？除了实现类里的方法加东西外还有其他办法吗？</p>
+<p>当然有！下面我们就用动态代理来解决这个问题。</p>
+<p>我们给UserImpl类添加一个代理类，真实的登录操作和退出操作还是在UserImpl中进行，但在代理对象中，我们还进行一点其他的操作，比如统计一下登录成功的次数，logout的调用次数，使用一个静态的int变量记录，这不就把在线人数统计出来了吗？</p>
+<p>下面就是我们的代理类： UserDynamicProxy.java</p>
+<pre><code>public class UserDynamicProxy implements InvocationHandler{
+
+    // 在线人数
+    public static int count = 0;
+    // 委托对象
+    private Object target; 
+
+    /**
+     * 返回代理对象
+     * @param target
+     * @return
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;T&gt; T getProxyInstance(Object target) {
+        // 委托对象，真正的业务对象
+        this.target = target;
+        // 获取Object类的ClassLoader
+        ClassLoader cl = target.getClass().getClassLoader();
+        // 获取接口数组
+        Class&lt;?&gt;[] cs = target.getClass().getInterfaces();
+        // 获取代理对象并返回
+        return (T)Proxy.newProxyInstance(cl, cs, this);
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object r = null;
+        // 执行之前
+        r = method.invoke(target, args);
+        // 判断如果是登录方法
+        if(&quot;login&quot;.equals(method.getName())) {
+            if((boolean)r == true) {
+                // 当前在线人数+1
+                count += 1;
+            }
+        } 
+        // 判断如果是退出方法
+        else if(&quot;logout&quot;.equals(method.getName())) {
+            // 当前在线人数-1
+            count -= 1;
+        }
+        showCount(); // 输出在线人数
+        // 执行之后
+        return r;
+    }
+
+    /**
+     * 输出在线人数
+     */
+    public void showCount() {
+        System.out.println(&quot;当前在线人数：&quot;+count+&quot; 人.&quot;);
+    }
+}
+</code></pre><p>InvocationHandler接口时JDK的，Proxy是java.lang.reflect包中，通过这两者可以实现动态代理。getProxyInstance是返回一个代理对象，通过这个代理对象可以做与原委托对象一样的事，因为他们都是实现的同一接口。</p>
+<p>场景类： Main.java</p>
+<pre><code>public class Main {
+
+    public static void main(String[] args) {
+        // 真实角色，委托人
+        User user = new UserImpl();    // 可执行真正的登录退出功能
+
+        // 代理类
+        UserDynamicProxy proxy = new UserDynamicProxy();
+
+        // 获取委托对象user的代理对象
+        User userProxy = proxy.getProxyInstance(user);
+
+        // 系统运行，用户开始登录退出
+        userProxy.login(&quot;小明&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小红&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小刚&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小明&quot;);
+        userProxy.logout(&quot;小刚&quot;);
+        userProxy.login(&quot;小黄&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小黑&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小黄&quot;);
+        userProxy.login(&quot;小李&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小李&quot;);
+        userProxy.logout(&quot;小黄&quot;);
+        userProxy.logout(&quot;小红&quot;);
+    }
+}
+</code></pre><p>输出结果如下：</p>
+<p>小明 登录成功.<br>当前在线人数：1 人.<br>小红 登录成功.<br>当前在线人数：2 人.<br>小刚 登录成功.<br>当前在线人数：3 人.<br>小明 成功退出.<br>当前在线人数：2 人.<br>小刚 成功退出.<br>当前在线人数：1 人.<br>小黄 登录成功.<br>当前在线人数：2 人.<br>小黑 登录成功.<br>当前在线人数：3 人.<br>小黄 成功退出.<br>当前在线人数：2 人.<br>小李 登录成功.<br>当前在线人数：3 人.<br>小李 成功退出.<br>当前在线人数：2 人.<br>小黄 成功退出.<br>当前在线人数：1 人.<br>小红 成功退出.<br>当前在线人数：0 人</p>
+<h4 id="Cglib实现的动态代理"><a href="#Cglib实现的动态代理" class="headerlink" title="Cglib实现的动态代理"></a>Cglib实现的动态代理</h4><blockquote>
+<p>上面有一句话是“代理对象和委托对象继承的是同一接口”，这表明了JDK实现的动态代理需要委托对象必须是继承了接口的，那如果我们的委托类就是一个类，没有继承哪个接口怎么办？ 这个时候我们就要使用Cglib来实现动态代理。</p>
+</blockquote>
+<p>和上面的问题一样，我们现在有一个业务类，它没有继承接口， UserMange.java</p>
+<pre><code>public class UserManage {
+
+    public boolean login(String username, String pwd) {
+        // 简化问题，直接登录成功
+        System.out.println(username+&quot; 登录成功.&quot;);
+        return true;
+    }
+
+    public void logout(String username) {
+        System.out.println(username+&quot; 成功退出.&quot;);
+    }
+}
+</code></pre><p>没有继承接口，JDK的动态代理就实现不了了，下面我们就使用Cglib来实现。Cglib是针对类来实现代理的，他的原理是对指定的目标类生成一个子类，并覆盖其中方法实现增强，但因为采用的是继承，所以不能对final修饰的类进行代理。</p>
+<p>UserCglibProxy.java</p>
+<pre><code>public class UserCglibProxy implements MethodInterceptor {  
+    // 在线人数
+    public static int count = 0;
+    // 委托类对象
+    private Object target;  
+
+    /** 
+     * 创建代理对象 
+     * @param target 
+     * @return 
+     */  
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public &lt;T&gt;T getProxyInstance(Object target) {  
+        this.target = target;  
+        // 增强类对象
+        Enhancer enhancer = new Enhancer();  
+        // 设置其超类为target的类类型
+        enhancer.setSuperclass(this.target.getClass());  
+        // 回调方法  
+        enhancer.setCallback(this);  
+        // 创建代理对象  
+        return (T)enhancer.create();  
+    }
+
+    @Override
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        Object r = null;
+        // 执行之前
+        r = proxy.invokeSuper(obj, args);
+        // 判断如果是登录方法
+        if(&quot;login&quot;.equals(method.getName())) {
+            if((boolean)r == true) {
+                // 当前在线人数+1
+                count += 1;
+            }
+        } 
+        // 判断如果是退出方法
+        else if(&quot;logout&quot;.equals(method.getName())) {
+            // 当前在线人数-1
+            count -= 1;
+        }
+        showCount(); // 输出在线人数
+        // 执行之后
+        return r;
+    }
+
+    /**
+     * 输出在线人数
+     */
+    public void showCount() {
+        System.out.println(&quot;当前在线人数：&quot;+count+&quot; 人.&quot;);
+    }
+
+}
+</code></pre><p>场景类： Main2.java</p>
+<pre><code>public class Main2 {
+
+    public static void main(String[] args) {
+        // 委托类对象
+        UserManage userManage = new UserManage();
+
+        // 代理类
+        UserCglibProxy proxy = new UserCglibProxy();
+
+        // 获取委托对象user的代理对象
+        UserManage userProxy = proxy.getProxyInstance(userManage);
+
+        // 系统运行，用户开始登录退出
+        userProxy.login(&quot;小明&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小红&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小刚&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小明&quot;);
+        userProxy.logout(&quot;小刚&quot;);
+        userProxy.login(&quot;小黄&quot;, &quot;111&quot;);
+        userProxy.login(&quot;小黑&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小黄&quot;);
+        userProxy.login(&quot;小李&quot;, &quot;111&quot;);
+        userProxy.logout(&quot;小李&quot;);
+        userProxy.logout(&quot;小黄&quot;);
+        userProxy.logout(&quot;小红&quot;);
+    }
+}
+</code></pre><h4 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h4><ul>
+<li><a href="http://download.csdn.net/detail/zgljl2012/9454724" target="_blank" rel="noopener">cglib.jar和asm-3.3.1.jar下载地址</a></li>
+<li><a href="http://mvnrepository.com/artifact/asm/asm/3.3.1" target="_blank" rel="noopener">asm包Maven下载地址</a></li>
+<li><a href="http://mvnrepository.com/artifact/cglib/cglib/2.2.2" target="_blank" rel="noopener">cglib包Maven下载地址</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring/" rel="tag"><i class="fa fa-tag"></i> Spring</a>
+          
+            <a href="/tags/设计模式/" rel="tag"><i class="fa fa-tag"></i> 设计模式</a>
+          
+            <a href="/tags/反射/" rel="tag"><i class="fa fa-tag"></i> 反射</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/01/hashcode与equals/" rel="next" title="Java基础：Hashcode与equals">
+                <i class="fa fa-chevron-left"></i> Java基础：Hashcode与equals
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/14/Redis持久化/" rel="prev" title="Redis持久化">
+                Redis持久化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/logo.jpg"
+               alt="Pingjin" />
+          <p class="site-author-name" itemprop="name">Pingjin</p>
+          <p class="site-description motion-element" itemprop="description">Java程序猿</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">71</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">88</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/AnthonyZero" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/5471182354/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://juejin.im/user/58171d3d2e958a0054a49808" target="_blank" title="倔金">
+                  
+                    <i class="fa fa-fw fa-spinner"></i>
+                  
+                  倔金
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；"><span class="nav-number">1.</span> <span class="nav-text">代理模式是设计模式中一个非常重要的模式，代理模式有两个角色，一个是代理类，一个是委托类，委托类也是真正的业务类，两者都有相同的接口；</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Spring中的AOP基本原理就是动态代理。"><span class="nav-number">2.</span> <span class="nav-text">Spring中的AOP基本原理就是动态代理。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JDK提供的InvocationHandler-接口和java-lang-reflect-包中的Proxy类"><span class="nav-number">3.</span> <span class="nav-text">JDK提供的InvocationHandler 接口和java.lang.reflect 包中的Proxy类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Cglib实现的动态代理"><span class="nav-number">4.</span> <span class="nav-text">Cglib实现的动态代理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#附录"><span class="nav-number">5.</span> <span class="nav-text">附录</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pingjin</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+
+
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid="></script>
+      <!-- UY END -->
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/src/love.js"></script>
+  
+</body>
+</html>
