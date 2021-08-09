@@ -83,7 +83,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="线程池,阻塞队列," />
+  <meta name="keywords" content="MySQL,log," />
 
 
 
@@ -99,21 +99,18 @@
 
 
 
-<meta name="description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
-<meta name="keywords" content="线程池,阻塞队列">
+<meta name="description" content="MySQL 的刷盘机制mysql 使用了 WAL 技术，即更新的时候先更新内存中的数据，然后必要的时候再将内存中的数据刷入磁盘。我们把内存中这些被修改过，跟磁盘中的数据页不一致的数据页称为”脏页”. 内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页” 平时执行很快的更新操作，其实就是在写内存和日志，而MySQL偶尔“抖”一下的那个瞬间，可能就是在刷脏页（flush)其中，有四">
+<meta name="keywords" content="MySQL,log">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JAVA中的线程池">
-<meta property="og:url" content="https://pingjin.gitee.io/2019/01/06/JAVA中的线程池/index.html">
+<meta property="og:title" content="MySQL笔记-内存数据刷盘机制">
+<meta property="og:url" content="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
-<meta property="og:description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
+<meta property="og:description" content="MySQL 的刷盘机制mysql 使用了 WAL 技术，即更新的时候先更新内存中的数据，然后必要的时候再将内存中的数据刷入磁盘。我们把内存中这些被修改过，跟磁盘中的数据页不一致的数据页称为”脏页”. 内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页” 平时执行很快的更新操作，其实就是在写内存和日志，而MySQL偶尔“抖”一下的那个瞬间，可能就是在刷脏页（flush)其中，有四">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://pingjin.gitee.io/images/backgroud/thread.png">
-<meta property="og:image" content="https://pingjin.gitee.io/images/thread.png">
-<meta property="og:updated_time" content="2019-08-11T09:37:52.335Z">
+<meta property="og:updated_time" content="2021-08-09T15:02:03.818Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JAVA中的线程池">
-<meta name="twitter:description" content="前言在开发过程中，合理的使用线程池能够带来3个好处第一：降低资源消耗,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗第二：提高响应速度，当任务到达时任务可以不需要等待线程创建就能立即执行第三：提高线程的可管理性，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控 实现原理如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图  判断当前线程池">
-<meta name="twitter:image" content="https://pingjin.gitee.io/images/backgroud/thread.png">
+<meta name="twitter:title" content="MySQL笔记-内存数据刷盘机制">
+<meta name="twitter:description" content="MySQL 的刷盘机制mysql 使用了 WAL 技术，即更新的时候先更新内存中的数据，然后必要的时候再将内存中的数据刷入磁盘。我们把内存中这些被修改过，跟磁盘中的数据页不一致的数据页称为”脏页”. 内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页” 平时执行很快的更新操作，其实就是在写内存和日志，而MySQL偶尔“抖”一下的那个瞬间，可能就是在刷脏页（flush)其中，有四">
 
 
 
@@ -141,13 +138,13 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2019/01/06/JAVA中的线程池/"/>
+  <link rel="canonical" href="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/"/>
 
 
 
 
 
-  <title> JAVA中的线程池 | AnthonyZero's Bolg </title>
+  <title> MySQL笔记-内存数据刷盘机制 | AnthonyZero's Bolg </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -270,7 +267,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2019/01/06/JAVA中的线程池/">
+  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -294,7 +291,7 @@
             
             
               
-                JAVA中的线程池
+                MySQL笔记-内存数据刷盘机制
               
             
           </h1>
@@ -309,8 +306,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-06T18:56:18+08:00">
-                2019-01-06
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-09T22:30:50+08:00">
+                2021-08-09
               </time>
             
 
@@ -332,8 +329,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index">
-                    <span itemprop="name">Java</span>
+                  <a href="/categories/SQL/" itemprop="url" rel="index">
+                    <span itemprop="name">SQL</span>
                   </a>
                 </span>
 
@@ -367,98 +364,55 @@
       
 
       
-        <p><img src="/images/backgroud/thread.png" alt="Alt text"></p>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在开发过程中，合理的使用线程池能够带来3个好处<br>第一：<strong>降低资源消耗</strong>,通过重复地利用已创建的线程降低线程创建和销毁带来的消耗<br>第二：<strong>提高响应速度</strong>，当任务到达时任务可以不需要等待线程创建就能立即执行<br>第三：<strong>提高线程的可管理性</strong>，线程是稀缺资源，应当将其放入一个池子中进行统一分配、调优和监控</p>
-<h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><p>如下：ThreadPoolExecutor执行execute()方法时，线程的处理流程图</p>
+        <h3 id="MySQL-的刷盘机制"><a href="#MySQL-的刷盘机制" class="headerlink" title="MySQL 的刷盘机制"></a>MySQL 的刷盘机制</h3><p>mysql 使用了 WAL 技术，即更新的时候先更新内存中的数据，然后必要的时候再将内存中的数据刷入磁盘。我们把内存中这些被修改过，跟磁盘中的数据页不一致的数据页称为”脏页”. 内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页”</p>
+<p>平时执行很快的更新操作，其实就是在写内存和日志，而MySQL偶尔“抖”一下的那个瞬间，可能就是在刷脏页（flush)<br>其中，有四种情况会触发脏页的刷盘：</p>
 <ol>
-<li>判断当前线程池线程数量是否小于核心线程池大小，是则创建线程并启动，否则到第2步</li>
-<li>判断任务队列是否已满，未满则将任务加入阻塞队列，已满则到第3步</li>
-<li>判断当前线程池线程数量是否小于最大线程池大小，是则创建线程并启动，否则执行饱和策略<a id="more"></a>
-<img src="/images/thread.png" alt="Alt text"></li>
+<li>redo log写满了。这时候系统会停止所有更新操作，把checkpoint往前推进，redo log留出空间可以继续写</li>
+<li>系统内存不足。当需要新的内存页，而内存不够用的时候，就要淘汰一些数据页，空出内存给别的数据页使用。如果淘汰的是“脏页”，就要先将脏页写到磁盘</li>
+<li>MySQL认为系统“空闲”的时候。 闲着也是闲着，不如刷脏页</li>
+<li>MySQL正常关闭的情况。这时候，MySQL会把内存的脏页都flush到磁盘上，这样下次MySQL启动的时候，就可以直接从磁盘上读数据，启动速度会很快</li>
 </ol>
 <blockquote>
-<p>当前运行的线程少于corePoolSize,直接创建新线程来执行任务（这是一个预热阶段，而且需要获取全局锁），后面当前运行的线程大于等于corePoolSize的时候，几乎所有的execute()方法调用都是执行步骤2，这步不需要获取全局锁</p>
+<p>从这里就可以看出: 数据flush 同步是通过刷新内存page 完成的 不是通过redo log</p>
 </blockquote>
-<p>通过ThreadPoolExecutor的execute方法源码了解线程池的工作原理</p>
-<pre><code>public void execute(Runnable command) {
-    //任务为空，抛出空指针异常
-    if (command == null)
-        throw new NullPointerException();
-    int c = ctl.get();
-    //判断当前线程数量是否小于核心线程数
-    if (workerCountOf(c) &lt; corePoolSize) {
-        //是则添加一个核心线程到线程池，并且启动线程执行任务（addWorker方法里会启动）
-        if (addWorker(command, true))
-            return;
-        c = ctl.get();
-    }
-    //线程池处于运行状态则向阻塞队列添加该任务
-    if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
-        int recheck = ctl.get();
-        //判断线程池是否处于运行状态，不是就移除刚才添加的任务
-        if (! isRunning(recheck) &amp;&amp; remove(command))
-            //移除成功就执行饱和策略，这样整个方法就结束了
-            reject(command);
-        //否则若处于运行状态或移除失败，这时无论处于哪种情况任务都在阻塞队列里，判断当前线程数量是否为0
-        else if (workerCountOf(recheck) == 0)
-            //若是则添加一个线程并启动
-            addWorker(null, false);
-    }
-    else if (!addWorker(command, false))
-        reject(command);
-}
-</code></pre><blockquote>
-<p>线程池创建线程时，会将线程封装为工作线程Worker，Worker在执行完任务后，还会循环获取工作队列里的任务来执行。</p>
-</blockquote>
-<h3 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h3><p>我们可以通过ThreadPoolExecutor来创建一个线程池</p>
-<pre><code>public ThreadPoolExecutor(int corePoolSize,
-                              int maximumPoolSize,
-                              long keepAliveTime,
-                              TimeUnit unit,
-                              BlockingQueue&lt;Runnable&gt; workQueue,
-                              ThreadFactory threadFactory,
-                              RejectedExecutionHandler handler) {
-    this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-         Executors.defaultThreadFactory(), handler);
-}
-</code></pre><p><font color="red"><strong>corePoolSize</strong></font>:线程池中的核心线程数，默认情况下，核心线程一直存活在线程池中，即便他们在线程池中处于闲置状态。除非我们将ThreadPoolExecutor的allowCoreThreadTimeOut属性设为true的时候，这时候处于闲置的核心线程在等待新任务到来时会有超时策略，这个超时时间由keepAliveTime来指定。一旦超过所设置的超时时间，闲置的核心线程就会被终止。</p>
-<p><font color="red"><strong>maximumPoolSize</strong></font>:线程池中所容纳的最大线程数，如果队列满了并且已经创建的线程小于这个值，则线程会在创建新的线程执行任务。如果使用了无界队列这个参数就没什么效果。</p>
-<p><font color="red"><strong>keepAliveTime</strong></font>:线程池的工作线程空闲后，保持存活的时间。所以如果任务很多并且每个任务的执行时间比较短，可以调大时间提高线程的利用率</p>
-<p><font color="red"><strong>unit</strong></font>:用于指定keepAliveTime参数的时间单位。可以使用的单位有天（TimeUnit.DAYS），小时（TimeUnit.HOURS），分钟（TimeUnit.MINUTES），毫秒(TimeUnit.MILLISECONDS)等</p>
-<p><font color="red"><strong>workQueue</strong></font>:线程池中保存等待执行的任务的阻塞队列，可选择ArrayBlockingQueue，LinkedBlockingQueue，SynchronousQueue等</p>
-<p><font color="red"><strong>threadFactory</strong></font>: 线程工厂，为线程池提供新线程的创建。ThreadFactory是一个接口，里面只有一个newThread方法。 默认为DefaultThreadFactory类        </p>
-<p><font color="red"><strong>handler</strong></font>: 饱和策略，是RejectedExecutionHandler对象，而RejectedExecutionHandler是一个接口，里面只有一个rejectedExecution方法。当任务队列已满并且线程池中的活动线程已经达到所限定的最大值或者是无法成功执行任务，这时候ThreadPoolExecutor会调用RejectedExecutionHandler中的rejectedExecution方法。在ThreadPoolExecutor中有四个内部类实现了RejectedExecutionHandler接口。在线程池中它默认是AbortPolicy，在无法处理新任务时抛出RejectedExecutionException异常。</p>
-<h3 id="提交任务"><a href="#提交任务" class="headerlink" title="提交任务"></a>提交任务</h3><p><strong>execute</strong>: 当我们使用execute来提交任务时，由于execute方法没有返回值，所以说我们也就无法判定任务是否被线程池执行成功。</p>
-<pre><code>service.execute(new  Runnable() {
-    public void run() {
-        System.out.println(&quot;execute方式&quot;);
-    }
-});
-</code></pre><p><strong>submit</strong>: 当我们使用submit来提交任务时,它会返回一个future,我们就可以通过这个future来判断任务是否执行成功，还可以通过future的get方法来获取返回值.如果子线程任务没有完成，get方法会阻塞住直到任务完成，而使用get(long timeout, TimeUnit unit)方法则会阻塞一段时间后立即返回，这时候有可能任务并没有执行完。</p>
-<pre><code>Future&lt;Integer&gt; future = service.submit(new Callable&lt;Integer&gt;() {
-                @Override
-                public Integer call() throws Exception {
-                    System.out.println(&quot;submit方式&quot;);
-                    return 666;
-                }
-            });
-try {
-    Integer number = future.get();
-    System.out.println(&quot;返回值为：&quot; + number);
-} catch (ExecutionException e) {
-    // TODO Auto-generated catch block
-    e.printStackTrace();
-}
-</code></pre><h3 id="关闭线程池"><a href="#关闭线程池" class="headerlink" title="关闭线程池"></a>关闭线程池</h3><p>调用线程池的shutdown()或shutdownNow()方法来关闭线程池<br>shutdown原理：将线程池状态设置成SHUTDOWN状态，然后中断所有<strong>没有正在执行</strong>任务的线程，（已提交的任务会被继续执行）。<br>shutdownNow原理：将线程池的状态设置成STOP状态，然后中断所有任务(包括正在执行的)的线程，并返回等待执行任务的列表。</p>
-<p><strong>中断采用interrupt方法，所以无法响应中断的任务可能永远无法终止</strong> 但调用上述的两个关闭之一，isShutdown()方法都会返为true，当所有任务都已关闭后，才表示线程池关闭完成，这时候isTerminated()方法返为true。<br><strong>通常调用shutdown方法来关闭线程池，当需要立刻中断所有的线程，如果任务不一定要执行完的话，可直接调用shutdownNow()方法</strong></p>
-<h3 id="线程池监控"><a href="#线程池监控" class="headerlink" title="线程池监控"></a>线程池监控</h3><p>ThreadPoolExecutor提供的线程池监控相关方法<br>getPoolSize()：获取当前线程池大小<br>getQueue()：获取工作队列实例<br>getLargestPoolSize()：获取工作者线程数曾达到的最大数<br>getAliveCount()：获取线程池中正在执行任务的工作者线程数<br>getTaskCount()：获取线程池接收到的任务数<br>getCompletedTaskCount()：获取已处理完毕的任务数</p>
-<h3 id="合理配置线程池"><a href="#合理配置线程池" class="headerlink" title="合理配置线程池"></a>合理配置线程池</h3><p>通常我们是需要根据分析这批任务执行的性质来确定：</p>
+<a id="more"></a>
+<h3 id="缓冲池-buffer-pool"><a href="#缓冲池-buffer-pool" class="headerlink" title="缓冲池-buffer pool"></a>缓冲池-buffer pool</h3><p>InnoDB用缓冲池（buffer pool）管理内存，缓冲池中的内存页有三种状态：</p>
 <ul>
-<li>IO 密集型任务：由于线程并不是一直在运行，所以可以尽可能的多配置线程，比如 CPU 个数 * 2</li>
-<li>CPU 密集型任务（大量复杂的运算）应当分配较少的线程，比如 CPU 个数 + 1相当的大小</li>
-<li>选择合适的阻塞队列（建议使用有界队列）：有界队列能增加系统的稳定性和预警能力。</li>
-<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲的时间就越长，那么线程数应该设置得越大，这样才能更好的利用CPU.</li>
+<li>第一种是，还没有使用的；</li>
+<li>第二种是，使用了并且是干净页；</li>
+<li>第三种是，使用了并且是脏页。</li>
 </ul>
+<p>InnoDB的策略是尽量使用内存，因此对于一个长时间运行的库来说，未被使用的页面很少。</p>
+<p>而当要读入的数据页没有在内存的时候，就必须到缓冲池中申请一个数据页。这时候只能把最久不使用的数据页从内存中淘汰掉：如果要淘汰的是一个干净页，就直接释放出来复用；<strong>但如果是脏页呢，就必须将脏页先刷到磁盘，变成干净页后才能复用</strong></p>
+<p>所以，刷脏页虽然是常态，但是出现以下这两种情况，都是会明显影响性能的：</p>
+<ol>
+<li>一个查询要淘汰的脏页个数太多，会导致查询的响应时间明显变长；（数据没在内存，进行了淘汰-脏页flush）对应上面的第二种情况</li>
+<li>日志写满，更新全部堵住，写性能跌为0，这种情况对敏感业务来说，是不能接受的。对应上面的第一种情况</li>
+</ol>
+<font color="red">InnoDB会在后台刷脏页，而刷脏页的过程是要将内存页数据flush写入磁盘。所以，无论是你的查询语句在需要内存的时候可能要求淘汰一个脏页，还是由于刷脏页的逻辑会占用IO资源并可能影响到了你的更新语句，都可能是造成你从业务端感知到MySQL“抖”了一下的原因</font>
+
+<h3 id="刷脏页的控制策略"><a href="#刷脏页的控制策略" class="headerlink" title="刷脏页的控制策略"></a>刷脏页的控制策略</h3><p>首先，我们必须要知道主机磁盘的写入能力有多强，这样 innodb 才可以知道它刷脏页的速度最快应该是多快。</p>
+<p>我们可以通过设置 innodb_io_capacity 这个参数来告诉 innodb 磁盘的写入速度。这个参数的值不宜过小，因为这会导致 innodb 错误的估计刷盘速度，最后导致刷脏页的速度跟不上脏页生成的速度。</p>
+<p>innodb_io_capacity规定了刷脏页速度的极限，但是实际上磁盘不可能只服务这么一个功能，所以还需要参考 redo log 的刷盘速度和允许的内存中的脏页比例。</p>
+<p>参数 innodb_max_dirty_pages_pct 是脏页比例上限，默认值是 75%。innodb 会根据当前的脏页比例（假设为 M），算出一个范围在 0 到 100 之间的数字，这个公式是 F1(M) 。</p>
+<p>而每次写入 redo log 的写入点 wp 都会有一个序号，innodb 会根据这个序号和上一次清理日志的界限 cp 之间的差值——我们假设为 N——计算得到一个范围在 0 到 100 之间的数字，这个公式是 F2(N)</p>
+<p>根据上述算得的 F1(M) 和 F2(N) 两个值，取其中较大的值记为 R，之后引擎就可以按照 innodb_io_capacity 定义的能力乘以 R% 来控制刷脏页的速度。</p>
+<p>所以，我们需要关注内存中的脏页比例，让它尽量不要到75%，并且合理的设置 innodb_io_capacity 参数。</p>
+<p>另外，由于 mysql 存在这样一个机制：如果要刷盘的脏页相邻的数据页恰好也是脏页，就一起写入磁盘，如果邻居的邻居也是如此。在机械硬盘时代这个策略可以减少随机IO，但是如果使用固态硬盘的话随机IO的性能往往比较高，所以使用这个策略反而拖累了查询性能。因此可以通过 innodb_flush_neighbors关闭这个“连坐”的策略。</p>
+<h3 id="答疑"><a href="#答疑" class="headerlink" title="答疑"></a>答疑</h3><p>Question:</p>
+<ol>
+<li>“内存不够用了，要先将脏页写到磁盘“redo log对应的空间会释放嘛？“redo log 写满了，要 flush 脏页” 那么对应的内存页会释放吗？</li>
+<li>将脏页flush到磁盘上是直接将脏页数据覆盖到对应磁盘上的数据？还是从磁盘上取到数据后取根据redo log记录进行更新后再写入到磁盘？</li>
+<li>innodb是如何知道一个页是不是脏页的，是有标记位还是通过redolog的chkeckpoint来确定的？</li>
+<li>请问下访问某条记录时，存储引擎是如何判断这条记录所在的数据页是否在内存当中，这个查内存机制是如何实现的</li>
+</ol>
+<p>Answer:</p>
+<ol>
+<li>Redolog 的空间是循环使用的，无所谓释放。 对应的内存页会变成干净页。但是等淘汰的时候才会逐出内存</li>
+<li>前者-覆盖</li>
+<li>每个数据页头部有LSN，8字节，每次修改都会变大,对比这个LSN跟checkpoint 的LSN，比checkpoint小的一定是干净页,淘汰的时候，刷脏页过程不用动redo log文件的. 是redo log在“重放”的时候，如果一个数据页已经是刷过的，会识别出来并跳过</li>
+<li>每个页面有编号的。拿着编号去内存看，没有，就去磁盘</li>
+</ol>
 
       
     </div>
@@ -482,9 +436,9 @@ try {
       
         <div class="post-tags">
           
-            <a href="/tags/线程池/" rel="tag"><i class="fa fa-tag"></i> 线程池</a>
+            <a href="/tags/MySQL/" rel="tag"><i class="fa fa-tag"></i> MySQL</a>
           
-            <a href="/tags/阻塞队列/" rel="tag"><i class="fa fa-tag"></i> 阻塞队列</a>
+            <a href="/tags/log/" rel="tag"><i class="fa fa-tag"></i> log</a>
           
         </div>
       
@@ -493,8 +447,8 @@ try {
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/01/03/JUC-Semaphore/" rel="next" title="JUC-Semaphore">
-                <i class="fa fa-chevron-left"></i> JUC-Semaphore
+              <a href="/2021/08/08/MySQL笔记-change-buffer/" rel="next" title="MySQL笔记-change buffer">
+                <i class="fa fa-chevron-left"></i> MySQL笔记-change buffer
               </a>
             
           </div>
@@ -502,10 +456,6 @@ try {
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/01/15/线程池-Executor框架/" rel="prev" title="线程池:Executor框架">
-                线程池:Executor框架 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -689,7 +639,7 @@ try {
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池的创建"><span class="nav-number">3.</span> <span class="nav-text">线程池的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#提交任务"><span class="nav-number">4.</span> <span class="nav-text">提交任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关闭线程池"><span class="nav-number">5.</span> <span class="nav-text">关闭线程池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池监控"><span class="nav-number">6.</span> <span class="nav-text">线程池监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#合理配置线程池"><span class="nav-number">7.</span> <span class="nav-text">合理配置线程池</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL-的刷盘机制"><span class="nav-number">1.</span> <span class="nav-text">MySQL 的刷盘机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓冲池-buffer-pool"><span class="nav-number">2.</span> <span class="nav-text">缓冲池-buffer pool</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#刷脏页的控制策略"><span class="nav-number">3.</span> <span class="nav-text">刷脏页的控制策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#答疑"><span class="nav-number">4.</span> <span class="nav-text">答疑</span></a></li></ol></div>
             
 
           </div>
