@@ -103,7 +103,7 @@
 <meta name="keywords" content="MySQL,log">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL笔记-内存数据刷盘机制">
-<meta property="og:url" content="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/index.html">
+<meta property="og:url" content="https://anthonyzero.github.io/2021/08/09/MySQL笔记-内存数据刷盘机制/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
 <meta property="og:description" content="MySQL 的刷盘机制mysql 使用了 WAL 技术，即更新的时候先更新内存中的数据，然后必要的时候再将内存中的数据刷入磁盘。我们把内存中这些被修改过，跟磁盘中的数据页不一致的数据页称为”脏页”. 内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页” 平时执行很快的更新操作，其实就是在写内存和日志，而MySQL偶尔“抖”一下的那个瞬间，可能就是在刷脏页（flush)其中，有四">
 <meta property="og:locale" content="zh-Hans">
@@ -138,7 +138,7 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/"/>
+  <link rel="canonical" href="https://anthonyzero.github.io/2021/08/09/MySQL笔记-内存数据刷盘机制/"/>
 
 
 
@@ -267,7 +267,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2021/08/09/MySQL笔记-内存数据刷盘机制/">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2021/08/09/MySQL笔记-内存数据刷盘机制/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -457,6 +457,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2022/10/25/LSM-Tree笔记/" rel="prev" title="LSM-Tree笔记">
+                LSM-Tree笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -541,14 +545,14 @@
                src="/images/logo.jpg"
                alt="Pingjin" />
           <p class="site-author-name" itemprop="name">Pingjin</p>
-          <p class="site-description motion-element" itemprop="description">Java/GoLang程序猿</p>
+          <p class="site-description motion-element" itemprop="description">Java/GoLang攻城狮</p>
         </div>
         <nav class="site-state motion-element">
         
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-count">75</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -566,7 +570,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">89</span>
+                <span class="site-state-item-count">92</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -661,7 +665,7 @@
 <div class="copyright" >
   
   &copy;  2017 - 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

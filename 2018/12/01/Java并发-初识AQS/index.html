@@ -83,7 +83,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="并发,AQS," />
+  <meta name="keywords" content="AQS,并发," />
 
 
 
@@ -100,20 +100,20 @@
 
 
 <meta name="description" content="概念AQS（AbstractQueuedSynchronizer）就是一个抽象的队列同步器，它是用来构建锁或者其他同步组件的基础框架，它维护了一个volatile int state来表示同步状态，通过内置的FIFO队列来完成线程等待排队。仅仅是定义了若干同步状态获取和释放，线程排队，等待与唤醒等底层操作的方法来供自定义同步组件使用或者重写。 AQS的设计是基于模板方法设计的，可供实现的模板方法基">
-<meta name="keywords" content="并发,AQS">
+<meta name="keywords" content="AQS,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java并发-初识AQS">
-<meta property="og:url" content="https://pingjin.gitee.io/2018/12/01/Java并发-初识AQS/index.html">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/12/01/Java并发-初识AQS/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
 <meta property="og:description" content="概念AQS（AbstractQueuedSynchronizer）就是一个抽象的队列同步器，它是用来构建锁或者其他同步组件的基础框架，它维护了一个volatile int state来表示同步状态，通过内置的FIFO队列来完成线程等待排队。仅仅是定义了若干同步状态获取和释放，线程排队，等待与唤醒等底层操作的方法来供自定义同步组件使用或者重写。 AQS的设计是基于模板方法设计的，可供实现的模板方法基">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://pingjin.gitee.io/images/aqs1.png">
-<meta property="og:image" content="https://pingjin.gitee.io/images/aqs.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/aqs1.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/aqs.png">
 <meta property="og:updated_time" content="2019-08-11T09:37:52.388Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java并发-初识AQS">
 <meta name="twitter:description" content="概念AQS（AbstractQueuedSynchronizer）就是一个抽象的队列同步器，它是用来构建锁或者其他同步组件的基础框架，它维护了一个volatile int state来表示同步状态，通过内置的FIFO队列来完成线程等待排队。仅仅是定义了若干同步状态获取和释放，线程排队，等待与唤醒等底层操作的方法来供自定义同步组件使用或者重写。 AQS的设计是基于模板方法设计的，可供实现的模板方法基">
-<meta name="twitter:image" content="https://pingjin.gitee.io/images/aqs1.png">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/aqs1.png">
 
 
 
@@ -141,7 +141,7 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2018/12/01/Java并发-初识AQS/"/>
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/12/01/Java并发-初识AQS/"/>
 
 
 
@@ -270,7 +270,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2018/12/01/Java并发-初识AQS/">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/12/01/Java并发-初识AQS/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -465,9 +465,9 @@ protected final boolean compareAndSetState(int expect, int update) {
       
         <div class="post-tags">
           
-            <a href="/tags/并发/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
-          
             <a href="/tags/AQS/" rel="tag"><i class="fa fa-tag"></i> AQS</a>
+          
+            <a href="/tags/并发/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
           
         </div>
       
@@ -574,14 +574,14 @@ protected final boolean compareAndSetState(int expect, int update) {
                src="/images/logo.jpg"
                alt="Pingjin" />
           <p class="site-author-name" itemprop="name">Pingjin</p>
-          <p class="site-description motion-element" itemprop="description">Java/GoLang程序猿</p>
+          <p class="site-description motion-element" itemprop="description">Java/GoLang攻城狮</p>
         </div>
         <nav class="site-state motion-element">
         
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-count">75</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -599,7 +599,7 @@ protected final boolean compareAndSetState(int expect, int update) {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">89</span>
+                <span class="site-state-item-count">92</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -694,7 +694,7 @@ protected final boolean compareAndSetState(int expect, int update) {
 <div class="copyright" >
   
   &copy;  2017 - 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

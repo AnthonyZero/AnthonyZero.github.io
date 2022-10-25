@@ -83,7 +83,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="并发,AQS," />
+  <meta name="keywords" content="AQS,并发," />
 
 
 
@@ -100,19 +100,19 @@
 
 
 <meta name="description" content="概述重入锁ReentrantLock，顾名思义就是支持重进入的锁，它表示该锁能够支持一个线程对资源的重复加锁。(即当前线程再次获取该锁不会被阻塞) Java关键字synchronized隐式支持重入性,实现的原理是通过编译后加上不同的机器指令来实现。而 ReentrantLock 就是一个普通的类，它是基于 AQS(AbstractQueuedSynchronizer)来实现的  synchron">
-<meta name="keywords" content="并发,AQS">
+<meta name="keywords" content="AQS,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java并发-重入锁ReentrantLock">
-<meta property="og:url" content="https://pingjin.gitee.io/2018/12/02/Java并发-重入锁ReentrantLock/index.html">
+<meta property="og:url" content="https://anthonyzero.github.io/2018/12/02/Java并发-重入锁ReentrantLock/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
 <meta property="og:description" content="概述重入锁ReentrantLock，顾名思义就是支持重进入的锁，它表示该锁能够支持一个线程对资源的重复加锁。(即当前线程再次获取该锁不会被阻塞) Java关键字synchronized隐式支持重入性,实现的原理是通过编译后加上不同的机器指令来实现。而 ReentrantLock 就是一个普通的类，它是基于 AQS(AbstractQueuedSynchronizer)来实现的  synchron">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://pingjin.gitee.io/images/reentrant.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/reentrant.png">
 <meta property="og:updated_time" content="2019-08-11T09:37:52.403Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java并发-重入锁ReentrantLock">
 <meta name="twitter:description" content="概述重入锁ReentrantLock，顾名思义就是支持重进入的锁，它表示该锁能够支持一个线程对资源的重复加锁。(即当前线程再次获取该锁不会被阻塞) Java关键字synchronized隐式支持重入性,实现的原理是通过编译后加上不同的机器指令来实现。而 ReentrantLock 就是一个普通的类，它是基于 AQS(AbstractQueuedSynchronizer)来实现的  synchron">
-<meta name="twitter:image" content="https://pingjin.gitee.io/images/reentrant.png">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/reentrant.png">
 
 
 
@@ -140,7 +140,7 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2018/12/02/Java并发-重入锁ReentrantLock/"/>
+  <link rel="canonical" href="https://anthonyzero.github.io/2018/12/02/Java并发-重入锁ReentrantLock/"/>
 
 
 
@@ -269,7 +269,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2018/12/02/Java并发-重入锁ReentrantLock/">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2018/12/02/Java并发-重入锁ReentrantLock/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -505,9 +505,9 @@ final boolean nonfairTryAcquire(int acquires) {
       
         <div class="post-tags">
           
-            <a href="/tags/并发/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
-          
             <a href="/tags/AQS/" rel="tag"><i class="fa fa-tag"></i> AQS</a>
+          
+            <a href="/tags/并发/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
           
         </div>
       
@@ -614,14 +614,14 @@ final boolean nonfairTryAcquire(int acquires) {
                src="/images/logo.jpg"
                alt="Pingjin" />
           <p class="site-author-name" itemprop="name">Pingjin</p>
-          <p class="site-description motion-element" itemprop="description">Java/GoLang程序猿</p>
+          <p class="site-description motion-element" itemprop="description">Java/GoLang攻城狮</p>
         </div>
         <nav class="site-state motion-element">
         
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-count">75</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -639,7 +639,7 @@ final boolean nonfairTryAcquire(int acquires) {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">89</span>
+                <span class="site-state-item-count">92</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -734,7 +734,7 @@ final boolean nonfairTryAcquire(int acquires) {
 <div class="copyright" >
   
   &copy;  2017 - 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

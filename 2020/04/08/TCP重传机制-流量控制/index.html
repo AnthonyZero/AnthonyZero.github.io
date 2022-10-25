@@ -103,7 +103,7 @@
 <meta name="keywords" content="TCP&#x2F;IP">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP重传机制&#x2F;流量控制">
-<meta property="og:url" content="https://pingjin.gitee.io/2020/04/08/TCP重传机制-流量控制/index.html">
+<meta property="og:url" content="https://anthonyzero.github.io/2020/04/08/TCP重传机制-流量控制/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
 <meta property="og:description" content="超时重传TCP要保证所有的数据包都可以到达，所以必需要有重传机制。 接收端给发送端的Ack确认只会确认最后一个连续的包,比如发送端发了1,2,3,4,5一共五份数据，接收端收到了1，2，于是会ack 3，然后收到了4，5（注意此时3因为可能丢包没收到），还是只会ack 3. 直观的解决方法是：接收方不做任何处理，当发送方发现收不到3的ack超时后，然后重传。缺点在于发送端不知道该重发3，还是重发3">
 <meta property="og:locale" content="zh-Hans">
@@ -142,7 +142,7 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2020/04/08/TCP重传机制-流量控制/"/>
+  <link rel="canonical" href="https://anthonyzero.github.io/2020/04/08/TCP重传机制-流量控制/"/>
 
 
 
@@ -271,7 +271,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2020/04/08/TCP重传机制-流量控制/">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2020/04/08/TCP重传机制-流量控制/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -546,14 +546,14 @@
                src="/images/logo.jpg"
                alt="Pingjin" />
           <p class="site-author-name" itemprop="name">Pingjin</p>
-          <p class="site-description motion-element" itemprop="description">Java/GoLang程序猿</p>
+          <p class="site-description motion-element" itemprop="description">Java/GoLang攻城狮</p>
         </div>
         <nav class="site-state motion-element">
         
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-count">75</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -571,7 +571,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">89</span>
+                <span class="site-state-item-count">92</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -666,7 +666,7 @@
 <div class="copyright" >
   
   &copy;  2017 - 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

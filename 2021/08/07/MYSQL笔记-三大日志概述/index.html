@@ -103,17 +103,17 @@
 <meta name="keywords" content="MySQL,log">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL笔记-三大日志概述">
-<meta property="og:url" content="https://pingjin.gitee.io/2021/08/07/MYSQL笔记-三大日志概述/index.html">
+<meta property="og:url" content="https://anthonyzero.github.io/2021/08/07/MYSQL笔记-三大日志概述/index.html">
 <meta property="og:site_name" content="AnthonyZero&#39;s Bolg">
 <meta property="og:description" content="redo log概述redo log又叫重做日志，提供的是数据丢失后的前滚操作。redo log是innodb引擎独有的日志，使用了 WAL 技术（Write-Ahead Logging），也就是预写日志。它的关键点就是先写日志，再写磁盘。对应到Mysql中具体操作，就是每次更新操作，先写日志，然后更新内存数据，最后等系统压力小的时候再进行IO更新磁盘数据。避免了每一次更新都需要进行IO操作。re">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://pingjin.gitee.io/images/redolog1.png">
-<meta property="og:image" content="https://pingjin.gitee.io/images/redolog2.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redolog1.png">
+<meta property="og:image" content="https://anthonyzero.github.io/images/redolog2.png">
 <meta property="og:updated_time" content="2021-08-07T16:33:57.106Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySQL笔记-三大日志概述">
 <meta name="twitter:description" content="redo log概述redo log又叫重做日志，提供的是数据丢失后的前滚操作。redo log是innodb引擎独有的日志，使用了 WAL 技术（Write-Ahead Logging），也就是预写日志。它的关键点就是先写日志，再写磁盘。对应到Mysql中具体操作，就是每次更新操作，先写日志，然后更新内存数据，最后等系统压力小的时候再进行IO更新磁盘数据。避免了每一次更新都需要进行IO操作。re">
-<meta name="twitter:image" content="https://pingjin.gitee.io/images/redolog1.png">
+<meta name="twitter:image" content="https://anthonyzero.github.io/images/redolog1.png">
 
 
 
@@ -141,7 +141,7 @@
 
 
 
-  <link rel="canonical" href="https://pingjin.gitee.io/2021/08/07/MYSQL笔记-三大日志概述/"/>
+  <link rel="canonical" href="https://anthonyzero.github.io/2021/08/07/MYSQL笔记-三大日志概述/"/>
 
 
 
@@ -270,7 +270,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://pingjin.gitee.io/2021/08/07/MYSQL笔记-三大日志概述/">
+  <link itemprop="mainEntityOfPage" href="https://anthonyzero.github.io/2021/08/07/MYSQL笔记-三大日志概述/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="Pingjin">
@@ -564,14 +564,14 @@
                src="/images/logo.jpg"
                alt="Pingjin" />
           <p class="site-author-name" itemprop="name">Pingjin</p>
-          <p class="site-description motion-element" itemprop="description">Java/GoLang程序猿</p>
+          <p class="site-description motion-element" itemprop="description">Java/GoLang攻城狮</p>
         </div>
         <nav class="site-state motion-element">
         
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">74</span>
+                <span class="site-state-item-count">75</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -589,7 +589,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">89</span>
+                <span class="site-state-item-count">92</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -684,7 +684,7 @@
 <div class="copyright" >
   
   &copy;  2017 - 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
